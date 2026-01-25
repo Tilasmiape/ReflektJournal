@@ -1,4 +1,5 @@
-﻿using ReflektJournal.Data;
+﻿
+using ReflektJournal.Data;
 using ReflektJournal.Models;
 using ReflektJournal.Services.Interfaces;
 
@@ -10,6 +11,6 @@ public sealed class CategoryService : ICategoryService
 
     public CategoryService(ReflektDatabase db) => _db = db;
 
-    public async Task<IReadOnlyList<Category>> ListAsync() =>
-        await _db.Conn.Table<Category>().OrderBy(x => x.Name).ToListAsync().ConfigureAwait(false);
+    public async Task<IReadOnlyList<EntryCategory>> ListAsync() =>
+        await _db.Conn.Table<EntryCategory>().OrderBy(x => x.Name).ToListAsync().ConfigureAwait(false);
 }

@@ -1,0 +1,24 @@
+﻿
+@namespace ReflektJournal.Pages.Auth
+
+<div class="auth-page">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>@Title</h1>
+            @if (!string.IsNullOrWhiteSpace(Subtitle))
+            {
+                <p>@Subtitle</p>
+            }
+        </div>
+
+        <div class="auth-body">
+            @ChildContent
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Title { get; set; } = "Welcome";
+    [Parameter] public string? Subtitle { get; set; }
+    [Parameter] public RenderFragment ChildContent { get; set; } = default!;
+}

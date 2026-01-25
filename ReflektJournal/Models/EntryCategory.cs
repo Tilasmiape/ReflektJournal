@@ -3,7 +3,7 @@
 namespace ReflektJournal.Models;
 
 [Table("categories")]
-public sealed class Category
+public sealed class EntryCategory
 {
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }

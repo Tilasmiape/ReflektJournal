@@ -1,0 +1,97 @@
+﻿
+@page "/login"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using ReflektJournal.Services.Interfaces
+@inject IAuthService Auth
+@inject NavigationManager Nav
+
+<Auth Title="Welcome Back" Subtitle="Enter your password to unlock.">
+    @if (!_registered)
+    {
+        <div class="error">
+            No account found on this device. Please create an account first.
+        </div>
+
+        <div class="actions">
+            <button class="btn btn-primary" @onclick="@(() => Nav.NavigateTo("/signup"))">Create Account</button>
+        </div>
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="HandleLoginAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="field">
+                <label>Password</label>
+                <InputText type="@(_showPassword ? "text" : "password")" @bind-Value="_model.Password" />
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" type="submit" disabled="@_busy">
+                    @(_busy ? "Unlocking..." : "Unlock")
+                </button>
+
+                <button class="btn btn-link" type="button" @onclick="TogglePassword">
+                    @(_showPassword ? "Hide" : "Show")
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="error">@_error</div>
+            }
+        </EditForm>
+    }
+</Auth>
+
+@code {
+    private bool _busy;
+    private bool _showPassword;
+    private bool _registered;
+    private string? _error;
+
+    private readonly LoginModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _registered = await Auth.IsRegisteredAsync();
+        if (_registered && Auth.IsUnlocked)
+            Nav.NavigateTo("/");
+    }
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private async Task HandleLoginAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            var ok = await Auth.UnlockAsync(_model.Password!);
+            if (!ok)
+            {
+                _error = "Invalid password.";
+                return;
+            }
+
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private sealed class LoginModel
+    {
+        [Required, StringLength(128, MinimumLength = 6)]
+        public string? Password { get; set; }
+    }
+}
