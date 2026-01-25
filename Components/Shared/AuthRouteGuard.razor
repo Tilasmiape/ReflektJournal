@@ -1,0 +1,40 @@
+﻿
+@using ReflektJournal.Services.Interfaces
+@inject IAuthService Auth
+@inject NavigationManager Nav
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await EnforceAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await EnforceAsync();
+    }
+
+    private async Task EnforceAsync()
+    {
+        var path = new Uri(Nav.Uri).AbsolutePath.TrimEnd('/').ToLowerInvariant();
+        var registered = await Auth.IsRegisteredAsync();
+
+        if (!registered && path != "/signup")
+        {
+            Nav.NavigateTo("/signup");
+            return;
+        }
+
+        if (registered && !Auth.IsUnlocked && path is not ("/login" or "/signup"))
+        {
+            Nav.NavigateTo("/login");
+            return;
+        }
+
+        if (registered && Auth.IsUnlocked && path is "/login" or "/signup")
+        {
+            Nav.NavigateTo("/");
+        }
+    }
+}

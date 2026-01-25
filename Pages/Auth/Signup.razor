@@ -1,0 +1,114 @@
+﻿
+@page "/signup"
+@using System.ComponentModel.DataAnnotations
+@using Microsoft.AspNetCore.Components.Forms
+@using ReflektJournal.Services.Interfaces
+@inject IAuthService Auth
+@inject NavigationManager Nav
+
+<Auth Title="Begin Your Story" Subtitle="Create your local vault (Name + Email + Password).">
+    @if (_alreadyRegistered)
+    {
+        <div class="error">
+            Account already exists on this device. Please login with your password.
+        </div>
+
+        <div class="actions">
+          
+            <button class="btn btn-primary" @onclick="@(() => Nav.NavigateTo("/login"))">Go to Login</button>
+            <button class="btn btn-link" type="button" @onclick="@(() => Nav.NavigateTo("/login"))">I already have an account</button>
+
+        </div>
+    }
+    else
+    {
+        <EditForm Model="_model" OnValidSubmit="HandleSignupAsync">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <div class="field">
+                <label>Your Name</label>
+                <InputText @bind-Value="_model.Name" />
+            </div>
+
+            <div class="field">
+                <label>Email</label>
+                <InputText @bind-Value="_model.Email" />
+            </div>
+
+            <div class="field">
+                <label>Password</label>
+                <InputText type="@(_showPassword ? "text" : "password")" @bind-Value="_model.Password" />
+            </div>
+
+            <div class="actions">
+                <button class="btn btn-primary" type="submit" disabled="@_busy">
+                    @(_busy ? "Creating..." : "Create Account")
+                </button>
+
+                <button class="btn btn-link" type="button" @onclick="TogglePassword">
+                    @(_showPassword ? "Hide" : "Show")
+                </button>
+
+                <button class="btn btn-link" type="button" @onclick="() => Nav.NavigateTo("/login")">
+                    I already have an account
+                </button>
+            </div>
+
+            @if (!string.IsNullOrWhiteSpace(_error))
+            {
+                <div class="error">@_error</div>
+            }
+        </EditForm>
+    }
+</Auth>
+
+@code {
+    private bool _busy;
+    private bool _showPassword;
+    private bool _alreadyRegistered;
+    private string? _error;
+
+    private readonly SignupModel _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _alreadyRegistered = await Auth.IsRegisteredAsync();
+        if (_alreadyRegistered && Auth.IsUnlocked)
+            Nav.NavigateTo("/");
+    }
+
+    private void TogglePassword() => _showPassword = !_showPassword;
+
+    private async Task HandleSignupAsync()
+    {
+        _busy = true;
+        _error = null;
+
+        try
+        {
+            await Auth.RegisterAsync(_model.Name!, _model.Email!, _model.Password!);
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _busy = false;
+        }
+    }
+
+    private sealed class SignupModel
+    {
+        [Required, StringLength(64, MinimumLength = 2)]
+        public string? Name { get; set; }
+
+        [Required, EmailAddress, StringLength(254)]
+        public string? Email { get; set; }
+
+        [Required, StringLength(128, MinimumLength = 6)]
+        public string? Password { get; set; }
+    }
+}

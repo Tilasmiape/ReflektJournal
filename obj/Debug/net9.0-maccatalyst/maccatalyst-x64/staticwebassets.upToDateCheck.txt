@@ -1,0 +1,8 @@
+wwwroot\css\app.css
+wwwroot\css\bootstrap\bootstrap.min.css
+wwwroot\css\bootstrap\bootstrap.min.css.map
+wwwroot\index.html
+C:\Users\Tilasmi Subedi\source\repos\ReflektJournal\ReflektJournal\wwwroot\css\app.css
+C:\Users\Tilasmi Subedi\source\repos\ReflektJournal\ReflektJournal\wwwroot\css\bootstrap\bootstrap.min.css
+C:\Users\Tilasmi Subedi\source\repos\ReflektJournal\ReflektJournal\wwwroot\css\bootstrap\bootstrap.min.css.map
+C:\Users\Tilasmi Subedi\source\repos\ReflektJournal\ReflektJournal\wwwroot\index.html

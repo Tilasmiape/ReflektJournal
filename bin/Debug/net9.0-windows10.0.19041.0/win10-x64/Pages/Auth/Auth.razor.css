@@ -1,0 +1,84 @@
+﻿
+.auth-page {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 440px;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    background: rgba(255,255,255,.06);
+    backdrop-filter: blur(10px);
+}
+
+.auth-header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.auth-header p {
+    margin: 6px 0 0 0;
+    opacity: .85;
+}
+
+.auth-body {
+    margin-top: 18px;
+}
+
+.field {
+    margin-bottom: 14px;
+}
+
+    .field label {
+        display: block;
+        font-size: 14px;
+        opacity: .9;
+        margin-bottom: 6px;
+    }
+
+    .field input {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,.18);
+        background: rgba(0,0,0,.18);
+        color: inherit;
+        outline: none;
+    }
+
+.actions {
+    margin-top: 14px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.btn {
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: rgba(255,255,255,.15);
+}
+
+.btn-link {
+    background: transparent;
+    text-decoration: underline;
+    padding: 8px 6px;
+}
+
+.error {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(255, 0, 0, .12);
+    border: 1px solid rgba(255, 0, 0, .25);
+}

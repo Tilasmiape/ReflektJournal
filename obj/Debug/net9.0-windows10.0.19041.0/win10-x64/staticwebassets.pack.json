@@ -1,0 +1,45 @@
+{
+  "Files": [
+    {
+      "Id": "C:\\Users\\Tilasmi Subedi\\source\\repos\\ReflektJournal\\ReflektJournal\\obj\\Debug\\net9.0-windows10.0.19041.0\\win10-x64\\scopedcss\\bundle\\ReflektJournal.styles.css",
+      "PackagePath": "staticwebassets\\ReflektJournal.styles.css"
+    },
+    {
+      "Id": "C:\\Users\\Tilasmi Subedi\\source\\repos\\ReflektJournal\\ReflektJournal\\wwwroot\\css\\app.css",
+      "PackagePath": "staticwebassets\\css\\app.css"
+    },
+    {
+      "Id": "C:\\Users\\Tilasmi Subedi\\source\\repos\\ReflektJournal\\ReflektJournal\\wwwroot\\css\\bootstrap\\bootstrap.min.css",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css"
+    },
+    {
+      "Id": "C:\\Users\\Tilasmi Subedi\\source\\repos\\ReflektJournal\\ReflektJournal\\wwwroot\\css\\bootstrap\\bootstrap.min.css.map",
+      "PackagePath": "staticwebassets\\css\\bootstrap\\bootstrap.min.css.map"
+    },
+    {
+      "Id": "C:\\Users\\Tilasmi Subedi\\source\\repos\\ReflektJournal\\ReflektJournal\\wwwroot\\index.html",
+      "PackagePath": "staticwebassets\\index.html"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.ReflektJournal.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.ReflektJournal.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.build.ReflektJournal.props",
+      "PackagePath": "build\\ReflektJournal.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.buildMultiTargeting.ReflektJournal.props",
+      "PackagePath": "buildMultiTargeting\\ReflektJournal.props"
+    },
+    {
+      "Id": "obj\\Debug\\net9.0-windows10.0.19041.0\\win10-x64\\staticwebassets\\msbuild.buildTransitive.ReflektJournal.props",
+      "PackagePath": "buildTransitive\\ReflektJournal.props"
+    }
+  ],
+  "ElementsToRemove": []
+}
