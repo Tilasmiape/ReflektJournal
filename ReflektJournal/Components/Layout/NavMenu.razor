@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@inject ReflektJournal.Services.Interfaces.IAuthService Auth
+@inject NavigationManager Nav
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">ReflektJournal</a>
     </div>
@@ -23,5 +25,16 @@
                 <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
             </NavLink>
         </div>
+        @if (Auth.IsUnlocked)
+        {
+            <button class="logout-btn" @onclick="LogoutAsync">Logout</button>
+        }
     </nav>
 </div>
+@code {
+    private async Task LogoutAsync()
+    {
+        await Auth.LockAsync();
+        Nav.NavigateTo("/login", replace: true);
+    }
+}
