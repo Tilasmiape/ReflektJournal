@@ -1,4 +1,5 @@
-﻿using ReflektJournal.Data;
+﻿
+using ReflektJournal.Data;
 using ReflektJournal.Models;
 using ReflektJournal.Services.Interfaces;
 
@@ -10,8 +11,15 @@ public sealed class JournalService : IJournalService
 
     public JournalService(ReflektDatabase db) => _db = db;
 
-    public Task<JournalEntry?> GetByDateAsync(string dateIso) =>
-        _db.Conn.Table<JournalEntry>().Where(x => x.DateIso == dateIso).FirstOrDefaultAsync();
+    public async Task<JournalEntry?> GetByDateAsync(string dateIso)
+    {
+        var row = await _db.Conn.Table<JournalEntry>()
+            .Where(x => x.DateIso == dateIso)
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
+
+        return row;
+    }
 
     public async Task<IReadOnlyList<JournalEntry>> ListAllAsync() =>
         await _db.Conn.Table<JournalEntry>().OrderByDescending(x => x.DateIso).ToListAsync().ConfigureAwait(false);

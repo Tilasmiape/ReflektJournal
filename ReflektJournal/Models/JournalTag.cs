@@ -3,7 +3,7 @@
 namespace ReflektJournal.Models;
 
 [Table("tags")]
-public sealed class Tag
+public sealed class JournalTag
 {
     [PrimaryKey, AutoIncrement]
     public int Id { get; set; }
