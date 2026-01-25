@@ -1,15 +1,13 @@
-﻿namespace ReflektJournal
-{
-    public partial class App : Application
-    {
-        public App()
-        {
-            InitializeComponent();
-        }
+﻿using ReflektJournal.Data;
 
-        protected override Window CreateWindow(IActivationState? activationState)
-        {
-            return new Window(new MainPage()) { Title = "ReflektJournal" };
-        }
+namespace ReflektJournal;
+
+public partial class App : Application
+{
+    public App(ReflektDatabase db)
+    {
+        InitializeComponent();
+        _ = db.InitializeAsync();
+        MainPage = new MainPage();
     }
 }
