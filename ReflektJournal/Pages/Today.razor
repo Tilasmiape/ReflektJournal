@@ -1,0 +1,597 @@
+﻿@page "/today"
+@using ReflektJournal.Models
+@using ReflektJournal.Services.Interfaces
+@using Microsoft.AspNetCore.Components.Web
+@inject IAuthService Auth
+@inject IJournalService Journal
+@inject IMoodService MoodService
+@inject ITagService TagService
+@inject IToastService Toast
+@inject NavigationManager Nav
+
+<h1 class="page-title">Reflections</h1>
+
+@if (!_ready)
+{
+    <p>Loading...</p>
+}
+else if (_entryExists && !_editMode)
+{
+    <div class="panel">
+        <div class="panel-icon">!</div>
+        <h2>Entry Already Exists</h2>
+        <p>You've already written today! You can edit today's entry instead.</p>
+
+        <div class="row">
+            <button class="btn btn-secondary" @onclick="GoBack">Go Back</button>
+            <button class="btn btn-primary" @onclick="EnableEdit">Edit Today's Entry</button>
+        </div>
+    </div>
+}
+else
+{
+    <div class="card">
+        <div class="date-row">@_displayDate</div>
+
+        <div class="field">
+            <label>Journal Title <span class="req">*</span></label>
+            <input value="@_title" @oninput="OnTitleChanged" placeholder="Today" />
+        </div>
+
+        <div class="field">
+            <label>How are you feeling? <span class="req">*</span></label>
+
+            <div class="primary-row">
+                @foreach (var p in _primaryMoods)
+                {
+                    var active = _primaryMoodId == p.Id;
+                    <button type="button"
+                            class="primary @(active ? "active" : "")"
+                            @onclick="@(() => SelectPrimary(p.Id))">
+                        <span class="emoji">@PrimaryEmoji(p.GroupKey)</span>
+                        <span class="label">@p.Name</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <div class="field">
+            <label>Specific emotions (up to 2) <span class="req">*</span></label>
+
+            @if (_primaryMoodId is null)
+            {
+                <div class="hint">Choose a primary mood to see emotions.</div>
+            }
+            else
+            {
+                <div class="chip-row">
+                    @foreach (var s in _secondaryForSelectedPrimary)
+                    {
+                        var on = _secondaryMoodIds.Contains(s.Id);
+                        <button type="button"
+                                class="chip @(on ? "chip-on" : "chip-off")"
+                                @onclick="@(() => ToggleSecondary(s.Id))">
+                            @s.Name
+                        </button>
+                    }
+                </div>
+
+                <div class="hint">Selected: @_secondaryMoodIds.Count / 2</div>
+            }
+        </div>
+
+        <div class="field">
+            <label>Tags</label>
+
+            <div class="chip-row">
+                @foreach (var t in _allTags)
+                {
+                    var on = _selectedTagIds.Contains(t.Id);
+                    <button type="button"
+                            class="chip @(on ? "chip-on" : "chip-off")"
+                            @onclick="@(() => ToggleTag(t.Id))">
+                        @t.Name
+                    </button>
+                }
+            </div>
+
+            <div class="tag-add">
+                <input placeholder="Add custom tag and press Enter"
+                       value="@_customTag"
+                       @oninput="OnCustomTagChanged"
+                       @onkeydown="OnCustomTagKeyDown" />
+                <button type="button" class="btn btn-secondary" @onclick="AddCustomTag">Add</button>
+            </div>
+
+            @if (_customTags.Count > 0)
+            {
+                <div class="custom-tags">
+                    @foreach (var t in _customTags)
+                    {
+                        <span class="custom-chip">
+                            @t
+                            <button type="button" class="x" @onclick="@(() => RemoveCustomTag(t))">×</button>
+                        </span>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="field">
+            <label>Entry</label>
+            <textarea rows="10" @bind="_content" placeholder="Write your thoughts..."></textarea>
+        </div>
+
+        <div class="row">
+            <button class="btn btn-primary" @onclick="SaveAsync" disabled="@_saving">
+                @(_saving ? "Saving..." : "Save Entry")
+            </button>
+
+            @if (_editMode && _entryExists)
+            {
+                <button class="btn btn-secondary" type="button" @onclick="CancelEdit">Cancel</button>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private bool _ready;
+    private bool _saving;
+
+    private string _dateIso = default!;
+    private string _displayDate = default!;
+    private int _userId;
+
+    private bool _entryExists;
+    private bool _editMode;
+    private int _entryId;
+
+    private string _title = "";
+    private string _content = "";
+
+    private List<Mood> _allMoods = new();
+    private List<Mood> _primaryMoods = new();
+    private List<Mood> _secondaryForSelectedPrimary = new();
+
+    private int? _primaryMoodId;
+    private readonly HashSet<int> _secondaryMoodIds = new();
+
+    private List<JournalTag> _allTags = new();
+    private readonly HashSet<int> _selectedTagIds = new();
+
+    private string _customTag = "";
+    private readonly HashSet<string> _customTags = new(StringComparer.OrdinalIgnoreCase);
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Auth.GetUserAsync();
+        if (user is null)
+        {
+            Nav.NavigateTo("/signup", replace: true);
+            return;
+        }
+
+        _userId = user.Id;
+
+        var now = DateTime.Now;
+        _dateIso = now.ToString("yyyy-MM-dd");
+        _displayDate = now.ToString("dddd, MMMM d, yyyy");
+
+        _allMoods = (await MoodService.ListAsync()).ToList();
+        _primaryMoods = _allMoods.Where(m => m.IsPrimary).ToList();
+
+        _allTags = (await TagService.ListAsync()).ToList();
+
+        await LoadTodayStateAsync();
+
+        if (!_entryExists)
+        {
+            var neutral = _primaryMoods.FirstOrDefault(m => m.GroupKey == "Neutral" || m.Name == "Neutral");
+            if (neutral is not null)
+                SelectPrimary(neutral.Id);
+        }
+
+        _ready = true;
+    }
+
+    private async Task LoadTodayStateAsync()
+    {
+        var existing = await Journal.GetByDateAsync(_dateIso);
+
+        if (existing is null)
+        {
+            _entryExists = false;
+            _editMode = true;
+            _entryId = 0;
+            ResetForm();
+            return;
+        }
+
+        _entryExists = true;
+        _editMode = false;
+        _entryId = existing.Id;
+    }
+
+    private void ResetForm()
+    {
+        _title = "";
+        _content = "";
+        _primaryMoodId = null;
+        _secondaryMoodIds.Clear();
+        _selectedTagIds.Clear();
+        _customTag = "";
+        _customTags.Clear();
+        _secondaryForSelectedPrimary = new List<Mood>();
+    }
+
+    private void GoBack() => Nav.NavigateTo("/entries", replace: true);
+
+    private async Task EnableEdit()
+    {
+        var existing = await Journal.GetByDateAsync(_dateIso);
+        if (existing is null)
+        {
+            _entryExists = false;
+            _editMode = true;
+            ResetForm();
+            return;
+        }
+
+        _editMode = true;
+
+        _title = existing.Title;
+        _content = existing.ContentMarkdown;
+
+        var moodState = await MoodService.GetEntryMoodsAsync(existing.Id);
+        _primaryMoodId = moodState.PrimaryMoodId;
+
+        _secondaryMoodIds.Clear();
+        foreach (var id in moodState.SecondaryMoodIds)
+            _secondaryMoodIds.Add(id);
+
+        if (_primaryMoodId is not null)
+            SelectPrimary(_primaryMoodId.Value);
+
+        // tags: map known tags to chips, unknown tags -> custom
+        _selectedTagIds.Clear();
+        _customTags.Clear();
+
+        var existingTagNames = await TagService.ListTagsForEntryAsync(existing.Id);
+        var known = _allTags.ToDictionary(t => t.Name, t => t.Id, StringComparer.OrdinalIgnoreCase);
+
+        foreach (var name in existingTagNames)
+        {
+            if (known.TryGetValue(name, out var id))
+                _selectedTagIds.Add(id);
+            else
+                _customTags.Add(name);
+        }
+    }
+
+    private void CancelEdit() => _editMode = false;
+
+    private void SelectPrimary(int primaryId)
+    {
+        _primaryMoodId = primaryId;
+        _secondaryMoodIds.Clear();
+
+        var primary = _allMoods.First(m => m.Id == primaryId);
+        _secondaryForSelectedPrimary = _allMoods
+            .Where(m => !m.IsPrimary && m.GroupKey == primary.GroupKey)
+            .OrderBy(m => m.Name)
+            .ToList();
+    }
+
+    private void ToggleSecondary(int moodId)
+    {
+        if (_secondaryMoodIds.Contains(moodId))
+        {
+            _secondaryMoodIds.Remove(moodId);
+            return;
+        }
+
+        if (_secondaryMoodIds.Count >= 2)
+        {
+            Toast.Error("You can select up to 2 secondary emotions.");
+            return;
+        }
+
+        _secondaryMoodIds.Add(moodId);
+    }
+
+    private void ToggleTag(int tagId)
+    {
+        if (_selectedTagIds.Contains(tagId))
+            _selectedTagIds.Remove(tagId);
+        else
+            _selectedTagIds.Add(tagId);
+    }
+
+    private void OnTitleChanged(ChangeEventArgs e) => _title = (e.Value?.ToString() ?? "").TrimStart();
+    private void OnCustomTagChanged(ChangeEventArgs e) => _customTag = (e.Value?.ToString() ?? "");
+
+    private Task OnCustomTagKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+            AddCustomTag();
+        return Task.CompletedTask;
+    }
+
+    private void AddCustomTag()
+    {
+        var name = (_customTag ?? "").Trim();
+        if (string.IsNullOrWhiteSpace(name))
+            return;
+
+        _customTags.Add(name);
+        _customTag = "";
+    }
+
+    private void RemoveCustomTag(string name) => _customTags.Remove(name);
+
+    private async Task SaveAsync()
+    {
+        if (_saving) return;
+        _saving = true;
+
+        try
+        {
+            // required validations
+            if (string.IsNullOrWhiteSpace(_title))
+            {
+                Toast.Error("Title is required! Please name your story.");
+                return;
+            }
+
+            if (_primaryMoodId is null)
+            {
+                Toast.Error("Please select a primary mood.");
+                return;
+            }
+
+            if (_secondaryMoodIds.Count < 1)
+            {
+                Toast.Error("Please select at least one secondary emotion.");
+                return;
+            }
+
+            // enforce single-entry-per-day
+            var existing = await Journal.GetByDateAsync(_dateIso);
+            if (existing is not null && existing.Id != _entryId && !_editMode)
+            {
+                _entryExists = true;
+                _editMode = false;
+                return;
+            }
+
+            var entry = new JournalEntry
+            {
+                Id = _entryId,
+                UserId = _userId,
+                DateIso = _dateIso,
+                Title = _title.Trim(),
+                ContentMarkdown = _content ?? "",
+                WordCount = CountWords(_content ?? "")
+            };
+
+            var id = await Journal.UpsertAsync(entry);
+            _entryId = id;
+
+            await MoodService.SetEntryMoodsAsync(id, _primaryMoodId.Value, _secondaryMoodIds.ToList());
+
+            var selectedTagNames = _allTags
+                .Where(t => _selectedTagIds.Contains(t.Id))
+                .Select(t => t.Name)
+                .Concat(_customTags)
+                .Select(t => t.Trim())
+                .Where(t => !string.IsNullOrWhiteSpace(t))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            await TagService.SetTagsForEntryAsync(id, selectedTagNames);
+
+            Toast.Success("Journal entry saved successfully!");
+
+            _entryExists = true;
+            _editMode = false;
+        }
+        catch
+        {
+            _entryExists = true;
+            _editMode = false;
+            Toast.Error("Entry Already Exists. You can edit today's entry instead.");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private static int CountWords(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return 0;
+        return text.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries).Length;
+    }
+
+    private static string PrimaryEmoji(string groupKey) => groupKey switch
+    {
+        "Positive" => "😊",
+        "Neutral" => "😐",
+        "Negative" => "😔",
+        _ => "🙂"
+    };
+}
+
+<style>
+    .page-title {
+        margin-bottom: 10px;
+    }
+
+    .req {
+        color: #ff9800;
+    }
+
+    .card {
+        max-width: 980px;
+        padding: 18px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .panel {
+        max-width: 920px;
+        padding: 18px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.12);
+    }
+
+    .panel-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 999px;
+        display: grid;
+        place-items: center;
+        background: rgba(255,140,0,.18);
+        border: 1px solid rgba(255,140,0,.35);
+        margin-bottom: 10px;
+        font-weight: 700;
+    }
+
+    .date-row {
+        opacity: .85;
+        margin-bottom: 12px;
+    }
+
+    .field {
+        margin-bottom: 14px;
+    }
+
+        .field label {
+            display: block;
+            margin-bottom: 6px;
+            opacity: .9;
+        }
+
+        .field input, .field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(0,0,0,.18);
+            color: inherit;
+            outline: none;
+        }
+
+    .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 14px;
+    }
+
+    .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        cursor: pointer;
+        background: rgba(255,255,255,.12);
+    }
+
+    .btn-primary {
+        background: rgba(255,255,255,.18);
+    }
+
+    .btn-secondary {
+        background: rgba(255,255,255,.10);
+    }
+
+    .primary-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .primary {
+        min-width: 180px;
+        border-radius: 16px;
+        padding: 14px 16px;
+        border: 1px solid rgba(255,255,255,.14);
+        background: rgba(0,0,0,.14);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+        .primary .emoji {
+            font-size: 18px;
+        }
+
+        .primary .label {
+            font-weight: 700;
+        }
+
+        .primary.active {
+            border-color: rgba(255, 140, 0, .9);
+            box-shadow: 0 0 0 2px rgba(255,140,0,.22);
+        }
+
+    .chip-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .chip {
+        border-radius: 999px;
+        padding: 8px 12px;
+        border: 1px solid rgba(255,255,255,.14);
+        cursor: pointer;
+        background: rgba(0,0,0,.14);
+    }
+
+    .chip-on {
+        background: rgba(255,255,255,.14);
+        border-color: rgba(255, 140, 0, .55);
+    }
+
+    .hint {
+        margin-top: 6px;
+        opacity: .75;
+        font-size: 13px;
+    }
+
+    .tag-add {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .custom-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .custom-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.12);
+    }
+
+        .custom-chip .x {
+            border: 0;
+            background: transparent;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            opacity: .9;
+        }
+</style>

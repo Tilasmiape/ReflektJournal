@@ -1,0 +1,13 @@
+﻿@page "/logout"
+@inject ReflektJournal.Services.Interfaces.IAuthService Auth
+@inject NavigationManager Nav
+
+<p>Locking...</p>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await Auth.LockAsync();
+        Nav.NavigateTo("/login", replace: true);
+    }
+}

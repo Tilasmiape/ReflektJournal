@@ -1,6 +1,5 @@
 ﻿
-@using ReflektJournal.Services.Interfaces
-@inject IAuthService Auth
+@inject ReflektJournal.Services.Interfaces.IAuthService Auth
 @inject NavigationManager Nav
 
 @code {
@@ -20,21 +19,22 @@
         var path = new Uri(Nav.Uri).AbsolutePath.TrimEnd('/').ToLowerInvariant();
         var registered = await Auth.IsRegisteredAsync();
 
-        if (!registered && path != "/signup")
+        if (!registered)
         {
-            Nav.NavigateTo("/signup");
+            if (path != "/signup")
+                Nav.NavigateTo("/signup", replace: true);
             return;
         }
 
-        if (registered && !Auth.IsUnlocked && path is not ("/login" or "/signup"))
+        if (!Auth.IsUnlocked)
         {
-            Nav.NavigateTo("/login");
+            if (path is not ("/login" or "/signup"))
+                Nav.NavigateTo("/login", replace: true);
             return;
         }
 
-        if (registered && Auth.IsUnlocked && path is "/login" or "/signup")
-        {
-            Nav.NavigateTo("/");
-        }
+        // Unlocked
+        if (path is "/login" or "/signup" or "")
+            Nav.NavigateTo("/today", replace: true);
     }
 }
