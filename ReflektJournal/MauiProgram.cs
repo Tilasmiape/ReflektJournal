@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿
+using Microsoft.Extensions.Logging;
 using ReflektJournal.Data;
 using ReflektJournal.Services;
 using ReflektJournal.Services.Interfaces;
@@ -27,6 +28,8 @@ public static class MauiProgram
         SQLitePCL.Batteries_V2.Init();
 
         builder.Services.AddSingleton<ReflektDatabase>();
+
+        builder.Services.AddSingleton<IToastService, ToastService>();
 
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IJournalService, JournalService>();

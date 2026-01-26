@@ -2,8 +2,7 @@
 @page "/login"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
-@using ReflektJournal.Services.Interfaces
-@inject IAuthService Auth
+@inject ReflektJournal.Services.Interfaces.IAuthService Auth
 @inject NavigationManager Nav
 
 <Auth Title="Welcome Back" Subtitle="Enter your password to unlock.">
@@ -14,7 +13,9 @@
         </div>
 
         <div class="actions">
-            <button class="btn btn-primary" @onclick="@(() => Nav.NavigateTo("/signup"))">Create Account</button>
+            <button class="btn btn-primary" @onclick="@(() => Nav.NavigateTo("/signup", replace: true))">
+                Create Account
+            </button>
         </div>
     }
     else
@@ -57,8 +58,10 @@
     protected override async Task OnInitializedAsync()
     {
         _registered = await Auth.IsRegisteredAsync();
+
+        // If already unlocked, send user to Today
         if (_registered && Auth.IsUnlocked)
-            Nav.NavigateTo("/");
+            Nav.NavigateTo("/today", replace: true);
     }
 
     private void TogglePassword() => _showPassword = !_showPassword;
@@ -77,7 +80,7 @@
                 return;
             }
 
-            Nav.NavigateTo("/");
+            Nav.NavigateTo("/today", replace: true);
         }
         catch (Exception ex)
         {
