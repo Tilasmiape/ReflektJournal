@@ -2,12 +2,15 @@
 @using ReflektJournal.Models
 @using ReflektJournal.Services.Interfaces
 @using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using Markdig
 @inject IAuthService Auth
 @inject IJournalService Journal
 @inject IMoodService MoodService
 @inject ITagService TagService
 @inject IToastService Toast
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 
 <h1 class="page-title">Reflections</h1>
 
@@ -118,8 +121,37 @@ else
         </div>
 
         <div class="field">
-            <label>Entry</label>
-            <textarea rows="10" @bind="_content" placeholder="Write your thoughts..."></textarea>
+            <div class="entry-header">
+                <label>Entry</label>
+
+                <div class="entry-actions">
+                    <button type="button" class="btn btn-secondary btn-sm" @onclick="TogglePreview">
+                        @(_showPreview ? "Hide Preview" : "Show Preview")
+                    </button>
+                </div>
+            </div>
+
+            <div class="md-toolbar">
+                <button type="button" class="tool" title="Bold" @onclick="@(() => WrapAsync("**", "**"))"><b>B</b></button>
+                <button type="button" class="tool" title="Italic" @onclick="@(() => WrapAsync("*", "*"))"><i>I</i></button>
+                <button type="button" class="tool" title="Heading" @onclick="@(() => PrefixLinesAsync("# "))">H</button>
+                <button type="button" class="tool" title="Bulleted list" @onclick="@(() => PrefixLinesAsync("- "))">•</button>
+                <button type="button" class="tool" title="Numbered list" @onclick="@(() => PrefixLinesAsync("1. "))">1.</button>
+                <button type="button" class="tool" title="Link" @onclick="InsertLinkAsync">🔗</button>
+            </div>
+
+            <textarea @ref="_entryArea"
+                      rows="10"
+                      value="@_content"
+                      @oninput="OnContentChanged"
+                      placeholder="Write your thoughts... (Markdown supported)"></textarea>
+
+            @if (_showPreview)
+            {
+                <div class="md-preview">
+                    @((MarkupString)_previewHtml)
+                </div>
+            }
         </div>
 
         <div class="row">
@@ -163,6 +195,17 @@ else
     private string _customTag = "";
     private readonly HashSet<string> _customTags = new(StringComparer.OrdinalIgnoreCase);
 
+    // Markdown
+    private ElementReference _entryArea;
+    private bool _showPreview = true;
+    private string _previewHtml = "";
+
+    private static readonly MarkdownPipeline _mdPipeline =
+        new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .DisableHtml()
+            .Build();
+
     protected override async Task OnInitializedAsync()
     {
         var user = await Auth.GetUserAsync();
@@ -192,7 +235,13 @@ else
                 SelectPrimary(neutral.Id);
         }
 
+        RefreshPreview();
         _ready = true;
+    }
+
+    private void RefreshPreview()
+    {
+        _previewHtml = Markdown.ToHtml(_content ?? "", _mdPipeline);
     }
 
     private async Task LoadTodayStateAsync()
@@ -223,6 +272,7 @@ else
         _customTag = "";
         _customTags.Clear();
         _secondaryForSelectedPrimary = new List<Mood>();
+        RefreshPreview();
     }
 
     private void GoBack() => Nav.NavigateTo("/entries", replace: true);
@@ -242,6 +292,7 @@ else
 
         _title = existing.Title;
         _content = existing.ContentMarkdown;
+        RefreshPreview();
 
         var moodState = await MoodService.GetEntryMoodsAsync(existing.Id);
         _primaryMoodId = moodState.PrimaryMoodId;
@@ -253,7 +304,6 @@ else
         if (_primaryMoodId is not null)
             SelectPrimary(_primaryMoodId.Value);
 
-        // tags: map known tags to chips, unknown tags -> custom
         _selectedTagIds.Clear();
         _customTags.Clear();
 
@@ -311,6 +361,13 @@ else
     private void OnTitleChanged(ChangeEventArgs e) => _title = (e.Value?.ToString() ?? "").TrimStart();
     private void OnCustomTagChanged(ChangeEventArgs e) => _customTag = (e.Value?.ToString() ?? "");
 
+    private void OnContentChanged(ChangeEventArgs e)
+    {
+        _content = e.Value?.ToString() ?? "";
+        if (_showPreview)
+            RefreshPreview();
+    }
+
     private Task OnCustomTagKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
@@ -330,6 +387,22 @@ else
 
     private void RemoveCustomTag(string name) => _customTags.Remove(name);
 
+    private void TogglePreview()
+    {
+        _showPreview = !_showPreview;
+        if (_showPreview)
+            RefreshPreview();
+    }
+
+    private async Task WrapAsync(string before, string after)
+        => await JS.InvokeVoidAsync("mdEditor.wrap", _entryArea, before, after);
+
+    private async Task PrefixLinesAsync(string prefix)
+        => await JS.InvokeVoidAsync("mdEditor.prefixLines", _entryArea, prefix);
+
+    private async Task InsertLinkAsync()
+        => await JS.InvokeVoidAsync("mdEditor.insertAtCursor", _entryArea, "[text](https://example.com)");
+
     private async Task SaveAsync()
     {
         if (_saving) return;
@@ -337,7 +410,6 @@ else
 
         try
         {
-            // required validations
             if (string.IsNullOrWhiteSpace(_title))
             {
                 Toast.Error("Title is required! Please name your story.");
@@ -356,7 +428,6 @@ else
                 return;
             }
 
-            // enforce single-entry-per-day
             var existing = await Journal.GetByDateAsync(_dateIso);
             if (existing is not null && existing.Id != _entryId && !_editMode)
             {
@@ -392,7 +463,6 @@ else
             await TagService.SetTagsForEntryAsync(id, selectedTagNames);
 
             Toast.Success("Journal entry saved successfully!");
-
             _entryExists = true;
             _editMode = false;
         }
@@ -448,64 +518,37 @@ else
         border: 1px solid rgba(255,255,255,.12);
     }
 
-    .panel-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 999px;
-        display: grid;
-        place-items: center;
-        background: rgba(255,140,0,.18);
-        border: 1px solid rgba(255,140,0,.35);
-        margin-bottom: 10px;
-        font-weight: 700;
-    }
-
-    .date-row {
-        opacity: .85;
-        margin-bottom: 12px;
-    }
-
-    .field {
-        margin-bottom: 14px;
-    }
-
-        .field label {
-            display: block;
-            margin-bottom: 6px;
-            opacity: .9;
-        }
-
-        .field input, .field textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255,255,255,.18);
-            background: rgba(0,0,0,.18);
-            color: inherit;
-            outline: none;
-        }
-
     .row {
         display: flex;
         gap: 10px;
         align-items: center;
         margin-top: 14px;
+        flex-wrap: wrap;
     }
 
-    .btn {
-        border: 0;
-        border-radius: 12px;
-        padding: 10px 14px;
-        cursor: pointer;
-        background: rgba(255,255,255,.12);
+    .field {
+        margin-top: 14px;
     }
 
-    .btn-primary {
-        background: rgba(255,255,255,.18);
+        .field label {
+            display: block;
+            margin-bottom: 8px;
+            opacity: .9;
+        }
+
+    input, textarea {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,.14);
+        background: rgba(0,0,0,.18);
+        color: inherit;
+        outline: none;
     }
 
-    .btn-secondary {
-        background: rgba(255,255,255,.10);
+    .date-row {
+        opacity: .75;
+        margin-bottom: 10px;
     }
 
     .primary-row {
@@ -515,83 +558,148 @@ else
     }
 
     .primary {
-        min-width: 180px;
-        border-radius: 16px;
+        min-width: 220px;
         padding: 14px 16px;
-        border: 1px solid rgba(255,255,255,.14);
+        border-radius: 16px;
+        border: 1px solid rgba(255,255,255,.10);
         background: rgba(0,0,0,.14);
+        cursor: pointer;
         display: flex;
-        align-items: center;
         gap: 10px;
+        align-items: center;
+        justify-content: center;
     }
 
-        .primary .emoji {
-            font-size: 18px;
-        }
-
-        .primary .label {
-            font-weight: 700;
-        }
-
         .primary.active {
-            border-color: rgba(255, 140, 0, .9);
-            box-shadow: 0 0 0 2px rgba(255,140,0,.22);
+            border: 2px solid #ff9800;
+            box-shadow: 0 0 0 4px rgba(255,152,0,.12);
         }
+
+    .emoji {
+        font-size: 18px;
+    }
+
+    .label {
+        font-weight: 600;
+    }
 
     .chip-row {
         display: flex;
-        flex-wrap: wrap;
         gap: 10px;
+        flex-wrap: wrap;
     }
 
     .chip {
+        padding: 10px 14px;
         border-radius: 999px;
-        padding: 8px 12px;
-        border: 1px solid rgba(255,255,255,.14);
+        border: 1px solid rgba(255,255,255,.12);
         cursor: pointer;
-        background: rgba(0,0,0,.14);
     }
 
     .chip-on {
-        background: rgba(255,255,255,.14);
-        border-color: rgba(255, 140, 0, .55);
+        border: 2px solid #ff9800;
     }
 
-    .hint {
-        margin-top: 6px;
-        opacity: .75;
-        font-size: 13px;
+    .chip-off {
+        opacity: .85;
     }
 
     .tag-add {
         display: flex;
         gap: 10px;
+        align-items: center;
         margin-top: 10px;
     }
 
     .custom-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
         margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .custom-chip {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 6px 10px;
+        padding: 8px 12px;
         border-radius: 999px;
-        background: rgba(255,255,255,.10);
         border: 1px solid rgba(255,255,255,.12);
+        display: flex;
+        gap: 8px;
+        align-items: center;
     }
 
         .custom-chip .x {
-            border: 0;
             background: transparent;
+            border: 0;
             cursor: pointer;
-            font-size: 16px;
-            line-height: 1;
-            opacity: .9;
+            font-size: 18px;
+        }
+
+    .btn {
+        border: 0;
+        border-radius: 12px;
+        padding: 10px 14px;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: rgba(255,255,255,.16);
+    }
+
+    .btn-secondary {
+        background: rgba(255,255,255,.10);
+    }
+
+    .entry-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .entry-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .md-toolbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .tool {
+        border: 1px solid rgba(255,255,255,.14);
+        background: rgba(0,0,0,.14);
+        border-radius: 10px;
+        padding: 6px 10px;
+        cursor: pointer;
+    }
+
+    .btn-sm {
+        padding: 6px 10px;
+        border-radius: 10px;
+    }
+
+    .md-preview {
+        margin-top: 12px;
+        padding: 14px;
+        border-radius: 14px;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(0,0,0,.12);
+    }
+
+        .md-preview :global(h1), .md-preview :global(h2), .md-preview :global(h3) {
+            margin-top: 14px;
+        }
+
+        .md-preview :global(a) {
+            text-decoration: underline;
+        }
+
+        .md-preview :global(code) {
+            padding: 2px 6px;
+            border-radius: 8px;
+            background: rgba(255,255,255,.08);
         }
 </style>
