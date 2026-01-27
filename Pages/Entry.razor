@@ -1,0 +1,282 @@
+﻿
+@page "/entry/{Id:int}"
+
+@using ReflektJournal.Models
+@using ReflektJournal.Data
+@using Markdig
+@inject ReflektDatabase Db
+@inject ReflektJournal.Services.Interfaces.IAuthService Auth
+@inject ReflektJournal.Services.Interfaces.IMoodService MoodService
+@inject ReflektJournal.Services.Interfaces.ITagService TagService
+@inject ReflektJournal.Services.Interfaces.IToastService Toast
+@inject NavigationManager Nav
+
+@if (!_ready)
+{
+    <div class="center">Loading…</div>
+}
+else if (_notFound)
+{
+    <div class="center">Entry not found.</div>
+}
+else
+{
+    <div class="wrap">
+        <div class="top">
+            <div>
+                <h1 class="h">@_dateIso</h1>
+                <div class="sub">Edit entry</div>
+            </div>
+            <div class="top-actions">
+                <button class="btn outline" type="button" @onclick="@(() => Nav.NavigateTo("/entries"))">Back</button>
+                <button class="btn primary" type="button" @onclick="SaveAsync" disabled="@_saving">@(_saving ? "Saving…" : "Save")</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="panel">
+                <div class="label">JOURNAL TITLE *</div>
+                <input class="control" @bind="_title" />
+
+                <div class="label mt">PRIMARY MOOD *</div>
+                <select class="control" @onchange="OnPrimaryChanged" value="@(_primaryMoodId?.ToString() ?? "")">
+                    <option value="">Select primary mood</option>
+                    @foreach (var pm in _primaryMoods)
+                    {
+                        <option value="@pm.Id">@pm.Name</option>
+                    }
+                </select>
+
+                <div class="label mt">SPECIFIC EMOTIONS (1–2) *</div>
+                <div class="chips">
+                    @foreach (var sm in _secondaryMoods)
+                    {
+                        var active = _secondaryMoodIds.Contains(sm.Id);
+                        <button class="chip @(active ? "active" : "")" type="button" @onclick="@(() => ToggleSecondary(sm.Id))">
+                            @sm.Name
+                        </button>
+                    }
+                </div>
+
+                <div class="label mt">TAGS (comma separated)</div>
+                <input class="control" @bind="_tagsCsv" placeholder="work, birthday, custom…" />
+
+                <div class="label mt">ENTRY (Markdown)</div>
+                <textarea class="textarea" @bind="_content"></textarea>
+            </div>
+
+            <div class="panel">
+                <div class="label">PREVIEW</div>
+                <div class="preview">
+                    @((MarkupString)_previewHtml)
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private bool _ready;
+    private bool _notFound;
+    private bool _saving;
+
+    private int _userId;
+    private string _dateIso = "";
+
+    private string _title = "";
+    private string _content = "";
+    private string _tagsCsv = "";
+
+    private int? _primaryMoodId;
+    private readonly HashSet<int> _secondaryMoodIds = new();
+
+    private List<Mood> _allMoods = new();
+    private List<Mood> _primaryMoods = new();
+    private List<Mood> _secondaryMoods = new();
+
+    private readonly MarkdownPipeline _md = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .Build();
+
+    private string _previewHtml = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var user = await Auth.GetUserAsync();
+            if (user is null)
+            {
+                Nav.NavigateTo("/signup", replace: true);
+                return;
+            }
+
+            _userId = user.Id;
+
+            await Db.InitializeAsync().ConfigureAwait(false);
+
+            _allMoods = (await MoodService.ListAsync()).ToList();
+            _primaryMoods = _allMoods.Where(m => m.IsPrimary).OrderBy(m => m.Name).ToList();
+
+            var entry = await Db.Conn.Table<JournalEntry>()
+                .Where(e => e.Id == Id && e.UserId == _userId)
+                .FirstOrDefaultAsync()
+                .ConfigureAwait(false);
+
+            if (entry is null)
+            {
+                _notFound = true;
+                _ready = true;
+                return;
+            }
+
+            _dateIso = entry.DateIso;
+            _title = entry.Title;
+            _content = entry.ContentMarkdown ?? "";
+
+            var moodState = await MoodService.GetEntryMoodsAsync(entry.Id).ConfigureAwait(false);
+            _primaryMoodId = moodState.PrimaryMoodId;
+
+            _secondaryMoodIds.Clear();
+            foreach (var sid in moodState.SecondaryMoodIds)
+                _secondaryMoodIds.Add(sid);
+
+            BuildSecondaryList();
+
+            var tags = await TagService.ListTagsForEntryAsync(entry.Id).ConfigureAwait(false);
+            _tagsCsv = string.Join(", ", tags);
+
+            RebuildPreview();
+            _ready = true;
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Entry load failed: {ex.Message}");
+        }
+    }
+
+    private void OnPrimaryChanged(ChangeEventArgs e)
+    {
+        _primaryMoodId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
+        _secondaryMoodIds.Clear();
+        BuildSecondaryList();
+    }
+
+    private void BuildSecondaryList()
+    {
+        _secondaryMoods.Clear();
+
+        if (_primaryMoodId is null) return;
+
+        var primary = _allMoods.FirstOrDefault(m => m.Id == _primaryMoodId.Value);
+        if (primary is null) return;
+
+        _secondaryMoods = _allMoods
+            .Where(m => !m.IsPrimary && string.Equals(m.GroupKey, primary.GroupKey, StringComparison.Ordinal))
+            .OrderBy(m => m.Name)
+            .ToList();
+    }
+
+    private void ToggleSecondary(int id)
+    {
+        if (_secondaryMoodIds.Contains(id))
+        {
+            _secondaryMoodIds.Remove(id);
+            return;
+        }
+
+        if (_secondaryMoodIds.Count >= 2)
+        {
+            Toast.Info("You can select up to 2 secondary emotions.");
+            return;
+        }
+
+        _secondaryMoodIds.Add(id);
+    }
+
+    private async Task SaveAsync()
+    {
+        if (_saving) return;
+
+        if (string.IsNullOrWhiteSpace(_title))
+        {
+            Toast.Error("Title is required! Please name your story.");
+            return;
+        }
+
+        if (_primaryMoodId is null)
+        {
+            Toast.Error("Please select a primary mood.");
+            return;
+        }
+
+        if (_secondaryMoodIds.Count < 1)
+        {
+            Toast.Error("Please select at least one secondary emotion.");
+            return;
+        }
+
+        _saving = true;
+
+        try
+        {
+            var entry = await Db.Conn.Table<JournalEntry>()
+                .Where(e => e.Id == Id && e.UserId == _userId)
+                .FirstOrDefaultAsync()
+                .ConfigureAwait(false);
+
+            if (entry is null)
+            {
+                Toast.Error("Entry no longer exists.");
+                _notFound = true;
+                return;
+            }
+
+            entry.Title = _title.Trim();
+            entry.ContentMarkdown = _content ?? "";
+            entry.WordCount = CountWords(_content ?? "");
+
+            await Db.Conn.UpdateAsync(entry).ConfigureAwait(false);
+
+            var tags = ParseTags(_tagsCsv);
+            await TagService.SetTagsForEntryAsync(entry.Id, tags).ConfigureAwait(false);
+
+            await MoodService.SetEntryMoodsAsync(entry.Id, _primaryMoodId.Value, _secondaryMoodIds.ToList()).ConfigureAwait(false);
+
+            RebuildPreview();
+            Toast.Success("Journal entry saved successfully!");
+            Nav.NavigateTo("/entries", replace: true);
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Save failed: {ex.Message}");
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private void RebuildPreview()
+    {
+        _previewHtml = Markdown.ToHtml(_content ?? "", _md);
+        StateHasChanged();
+    }
+
+    private static int CountWords(string s)
+    {
+        if (string.IsNullOrWhiteSpace(s)) return 0;
+        var parts = s.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length;
+    }
+
+    private static List<string> ParseTags(string csv)
+        => (csv ?? "")
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(t => t.Trim())
+            .Where(t => !string.IsNullOrWhiteSpace(t))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+}

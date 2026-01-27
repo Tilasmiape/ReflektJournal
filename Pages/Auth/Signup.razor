@@ -1,9 +1,8 @@
-﻿
+﻿﻿
 @page "/signup"
 @using System.ComponentModel.DataAnnotations
 @using Microsoft.AspNetCore.Components.Forms
-@using ReflektJournal.Services.Interfaces
-@inject IAuthService Auth
+@inject ReflektJournal.Services.Interfaces.IAuthService Auth
 @inject NavigationManager Nav
 
 <Auth Title="Begin Your Story" Subtitle="Create your local vault (Name + Email + Password).">
@@ -14,10 +13,9 @@
         </div>
 
         <div class="actions">
-          
-            <button class="btn btn-primary" @onclick="@(() => Nav.NavigateTo("/login"))">Go to Login</button>
-            <button class="btn btn-link" type="button" @onclick="@(() => Nav.NavigateTo("/login"))">I already have an account</button>
-
+            <button class="btn btn-primary" @onclick="@(() => Nav.NavigateTo("/login", replace: true))">
+                Go to Login
+            </button>
         </div>
     }
     else
@@ -50,7 +48,7 @@
                     @(_showPassword ? "Hide" : "Show")
                 </button>
 
-                <button class="btn btn-link" type="button" @onclick="() => Nav.NavigateTo("/login")">
+                <button class="btn btn-link" type="button" @onclick="@(() => Nav.NavigateTo("/login", replace: true))">
                     I already have an account
                 </button>
             </div>
@@ -74,8 +72,10 @@
     protected override async Task OnInitializedAsync()
     {
         _alreadyRegistered = await Auth.IsRegisteredAsync();
+
+        // If already registered and unlocked, send to Today
         if (_alreadyRegistered && Auth.IsUnlocked)
-            Nav.NavigateTo("/");
+            Nav.NavigateTo("/today", replace: true);
     }
 
     private void TogglePassword() => _showPassword = !_showPassword;
@@ -88,7 +88,7 @@
         try
         {
             await Auth.RegisterAsync(_model.Name!, _model.Email!, _model.Password!);
-            Nav.NavigateTo("/");
+            Nav.NavigateTo("/today", replace: true);
         }
         catch (Exception ex)
         {

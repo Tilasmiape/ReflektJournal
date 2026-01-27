@@ -72,13 +72,33 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>w323mnbm3j</Fingerprint>
-      <Integrity>bO84EJLkPX8CheI2bF+RieEVfNZlQPZpOH96Otzk4yw=</Integrity>
+      <Fingerprint>hdyfi6cj9l</Fingerprint>
+      <Integrity>O/pmEbkpCqvTfn63sjHvDmxDQKpe103LwYZvis3gFic=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <FileLength>861</FileLength>
-      <LastWriteTime>Sun, 25 Jan 2026 17:14:48 GMT</LastWriteTime>
+      <FileLength>907</FileLength>
+      <LastWriteTime>Mon, 26 Jan 2026 10:29:18 GMT</LastWriteTime>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\index.html'))</OriginalItemSpec>
+    </StaticWebAsset>
+    <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\mdEditor.js'))">
+      <SourceType>Package</SourceType>
+      <SourceId>ReflektJournal</SourceId>
+      <ContentRoot>$(MSBuildThisFileDirectory)..\staticwebassets\</ContentRoot>
+      <BasePath>/</BasePath>
+      <RelativePath>js/mdEditor.js</RelativePath>
+      <AssetKind>All</AssetKind>
+      <AssetMode>All</AssetMode>
+      <AssetRole>Primary</AssetRole>
+      <RelatedAsset></RelatedAsset>
+      <AssetTraitName></AssetTraitName>
+      <AssetTraitValue></AssetTraitValue>
+      <Fingerprint>ukfl5kwfxk</Fingerprint>
+      <Integrity>Hve80hoJ4M0fdPej/brwOfFbKms9REdkFvoKEL+1uhA=</Integrity>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <FileLength>2149</FileLength>
+      <LastWriteTime>Mon, 26 Jan 2026 10:30:15 GMT</LastWriteTime>
+      <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\mdEditor.js'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ReflektJournal.styles.css'))">
       <SourceType>Package</SourceType>
@@ -92,12 +112,12 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName>ScopedCss</AssetTraitName>
       <AssetTraitValue>ApplicationBundle</AssetTraitValue>
-      <Fingerprint>jxppid8moh</Fingerprint>
-      <Integrity>eQpoJ8MeNLf9DFWxMu/XtN27OeaC+FUDqA3iQ7tl1RE=</Integrity>
+      <Fingerprint>xtqm6aqctq</Fingerprint>
+      <Integrity>qwDU01b40MKoUzhIzR2VrJxVihpRHXE42rsZpyt/4+I=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <FileLength>7170</FileLength>
-      <LastWriteTime>Sun, 25 Jan 2026 19:24:48 GMT</LastWriteTime>
+      <FileLength>17775</FileLength>
+      <LastWriteTime>Mon, 26 Jan 2026 18:52:44 GMT</LastWriteTime>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ReflektJournal.styles.css'))</OriginalItemSpec>
     </StaticWebAsset>
   </ItemGroup>

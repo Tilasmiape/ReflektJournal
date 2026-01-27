@@ -1,4 +1,5 @@
 ﻿
+using ReflektJournal.Data.Models;
 using ReflektJournal.Models;
 using SQLite;
 
@@ -27,15 +28,30 @@ public sealed class ReflektDatabase
     {
         await Conn.CreateTableAsync<User>().ConfigureAwait(false);
         await Conn.CreateTableAsync<JournalEntry>().ConfigureAwait(false);
+
+        // DEV-SAFE RESET: schema evolves early; easiest to reset lookup tables
+        await ResetLookupTablesForDevAsync().ConfigureAwait(false);
+
         await Conn.CreateTableAsync<Mood>().ConfigureAwait(false);
-        await Conn.CreateTableAsync<EntryCategory>().ConfigureAwait(false);
+        await Conn.CreateTableAsync<EntryMood>().ConfigureAwait(false);
+
         await Conn.CreateTableAsync<JournalTag>().ConfigureAwait(false);
         await Conn.CreateTableAsync<EntryTag>().ConfigureAwait(false);
-        await Conn.CreateTableAsync<EntryMood>().ConfigureAwait(false);
+
         await Conn.CreateTableAsync<AppSettings>().ConfigureAwait(false);
 
         await EnsureSingletonSettingsRowAsync().ConfigureAwait(false);
         await EnsureSeedLookupsAsync().ConfigureAwait(false);
+    }
+
+    private async Task ResetLookupTablesForDevAsync()
+    {
+        // Why: sqlite-net CreateTableAsync does not add new columns automatically.
+        // Removing these tables is OK early dev; do real migrations later.
+        await Conn.ExecuteAsync("DROP TABLE IF EXISTS moods").ConfigureAwait(false);
+        await Conn.ExecuteAsync("DROP TABLE IF EXISTS tags").ConfigureAwait(false);
+        await Conn.ExecuteAsync("DROP TABLE IF EXISTS entry_moods").ConfigureAwait(false);
+        await Conn.ExecuteAsync("DROP TABLE IF EXISTS entry_tags").ConfigureAwait(false);
     }
 
     private async Task EnsureSingletonSettingsRowAsync()
@@ -55,27 +71,48 @@ public sealed class ReflektDatabase
     {
         if (await Conn.Table<Mood>().CountAsync().ConfigureAwait(false) == 0)
         {
-            await Conn.InsertAllAsync(new[]
+            var moods = new List<Mood>
             {
-                new Mood { Name = "Happy" },
-                new Mood { Name = "Calm" },
-                new Mood { Name = "Neutral" },
-                new Mood { Name = "Anxious" },
-                new Mood { Name = "Sad" },
-                new Mood { Name = "Angry" },
-            }).ConfigureAwait(false);
+                // Primary (3)
+                new() { Name = "Positive", GroupKey = "Positive", IsPrimary = true },
+                new() { Name = "Neutral",  GroupKey = "Neutral",  IsPrimary = true },
+                new() { Name = "Negative", GroupKey = "Negative", IsPrimary = true },
+
+                // Secondary - Positive
+                new() { Name = "Happy",     GroupKey = "Positive", IsPrimary = false },
+                new() { Name = "Excited",   GroupKey = "Positive", IsPrimary = false },
+                new() { Name = "Relaxed",   GroupKey = "Positive", IsPrimary = false },
+                new() { Name = "Grateful",  GroupKey = "Positive", IsPrimary = false },
+                new() { Name = "Confident", GroupKey = "Positive", IsPrimary = false },
+
+                // Secondary - Neutral
+                new() { Name = "Calm",       GroupKey = "Neutral", IsPrimary = false },
+                new() { Name = "Thoughtful", GroupKey = "Neutral", IsPrimary = false },
+                new() { Name = "Curious",    GroupKey = "Neutral", IsPrimary = false },
+                new() { Name = "Nostalgic",  GroupKey = "Neutral", IsPrimary = false },
+                new() { Name = "Bored",      GroupKey = "Neutral", IsPrimary = false },
+
+                // Secondary - Negative
+                new() { Name = "Sad",      GroupKey = "Negative", IsPrimary = false },
+                new() { Name = "Angry",    GroupKey = "Negative", IsPrimary = false },
+                new() { Name = "Stressed", GroupKey = "Negative", IsPrimary = false },
+                new() { Name = "Lonely",   GroupKey = "Negative", IsPrimary = false },
+                new() { Name = "Anxious",  GroupKey = "Negative", IsPrimary = false },
+            };
+
+            await Conn.InsertAllAsync(moods).ConfigureAwait(false);
         }
 
-        if (await Conn.Table<EntryCategory>().CountAsync().ConfigureAwait(false) == 0)
+        if (await Conn.Table<JournalTag>().CountAsync().ConfigureAwait(false) == 0)
         {
-            await Conn.InsertAllAsync(new[]
+            var tags = new[]
             {
-                new EntryCategory { Name = "Personal" },
-                new EntryCategory { Name = "Work" },
-                new EntryCategory { Name = "Family" },
-                new EntryCategory { Name = "Health" },
-                new EntryCategory { Name = "Travel" },
-            }).ConfigureAwait(false);
+                "Work","Career","Studies","Family","Friends","Relationships",
+                "Health","Fitness","Personal Growth","Self-Care","Hobbies","Travel",
+                "Nature","Finance","Spirituality","Birthday","Holiday","Vacation"
+            };
+
+            await Conn.InsertAllAsync(tags.Select(t => new JournalTag { Name = t })).ConfigureAwait(false);
         }
     }
 }

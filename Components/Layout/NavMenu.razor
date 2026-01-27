@@ -1,36 +1,60 @@
-﻿@inject ReflektJournal.Services.Interfaces.IAuthService Auth
+﻿﻿@using Microsoft.AspNetCore.Components.Routing
+@inject ReflektJournal.Services.Interfaces.IAuthService Auth
 @inject NavigationManager Nav
+
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">ReflektJournal</a>
+        <a class="navbar-brand" href="/today">ReflektJournal</a>
     </div>
 </div>
 
 <input type="checkbox" title="Navigation menu" class="navbar-toggler" />
 
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler')?.click()">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            <NavLink class="nav-link" href="/today" Match="NavLinkMatch.All">
+                <span class="bi bi-pencil-square" aria-hidden="true"></span> Write
             </NavLink>
         </div>
+
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="/entries">
+                <span class="bi bi-journal-text" aria-hidden="true"></span> Entries
             </NavLink>
         </div>
+
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
+            <NavLink class="nav-link" href="/calendar">
+                <span class="bi bi-calendar3" aria-hidden="true"></span> Calendar
             </NavLink>
         </div>
+
+       
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/analytics">
+                <span class="bi bi-bar-chart-line" aria-hidden="true"></span> Analytics
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/settings">
+                <span class="bi bi-gear" aria-hidden="true"></span> Settings
+            </NavLink>
+        </div>
+
         @if (Auth.IsUnlocked)
         {
-            <button class="logout-btn" @onclick="LogoutAsync">Logout</button>
+            <div class="nav-item px-3 mt-3">
+                <button type="button" class="nav-link logout-btn" @onclick="LogoutAsync">
+                    <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Logout
+                </button>
+            </div>
         }
     </nav>
 </div>
+
 @code {
     private async Task LogoutAsync()
     {

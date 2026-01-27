@@ -4,6 +4,13 @@
         <name>ReflektJournal</name>
     </assembly>
     <members>
+        <member name="M:ReflektJournal.Services.Interfaces.IJournalService.UpsertAsync(ReflektJournal.Models.JournalEntry)">
+            <summary>
+            Insert or Update. If Id=0 but an entry exists for the same (UserId+DateIso),
+            it updates that entry instead of inserting a duplicate.
+            Returns entry Id.
+            </summary>
+        </member>
         <member name="T:ReflektJournal.Resource">
             <summary>
             Android Resource Designer class.

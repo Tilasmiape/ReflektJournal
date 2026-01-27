@@ -1,10 +1,11 @@
 {
   "version": 2,
-  "dgSpecHash": "4TKtUPIoFVA=",
+  "dgSpecHash": "9X63tpd+qzE=",
   "success": true,
   "projectFilePath": "C:\\Users\\Tilasmi Subedi\\source\\repos\\ReflektJournal\\ReflektJournal\\ReflektJournal.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Tilasmi Subedi\\.nuget\\packages\\googlegson\\2.13.0.1\\googlegson.2.13.0.1.nupkg.sha512",
+    "C:\\Users\\Tilasmi Subedi\\.nuget\\packages\\markdig\\0.44.0\\markdig.0.44.0.nupkg.sha512",
     "C:\\Users\\Tilasmi Subedi\\.nuget\\packages\\microsoft.aspnetcore.authorization\\9.0.8\\microsoft.aspnetcore.authorization.9.0.8.nupkg.sha512",
     "C:\\Users\\Tilasmi Subedi\\.nuget\\packages\\microsoft.aspnetcore.components\\9.0.8\\microsoft.aspnetcore.components.9.0.8.nupkg.sha512",
     "C:\\Users\\Tilasmi Subedi\\.nuget\\packages\\microsoft.aspnetcore.components.analyzers\\9.0.8\\microsoft.aspnetcore.components.analyzers.9.0.8.nupkg.sha512",

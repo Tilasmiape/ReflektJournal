@@ -18,6 +18,19 @@
           }
         }
       },
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -2728,6 +2741,19 @@
         "runtime": {
           "lib/net8.0-android34.0/GoogleGson.dll": {
             "related": ".aar;.pdb;.xml"
+          }
+        }
+      },
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
           }
         }
       },
@@ -5444,6 +5470,19 @@
           }
         }
       },
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -8154,6 +8193,19 @@
         "runtime": {
           "lib/net8.0-android34.0/GoogleGson.dll": {
             "related": ".aar;.pdb;.xml"
+          }
+        }
+      },
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
           }
         }
       },
@@ -10870,6 +10922,19 @@
           }
         }
       },
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -13583,6 +13648,19 @@
           }
         }
       },
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -16280,6 +16358,19 @@
       }
     },
     "net9.0-ios26.0": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -17066,6 +17157,19 @@
       }
     },
     "net9.0-ios26.0/android-arm64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -17852,6 +17956,19 @@
       }
     },
     "net9.0-ios26.0/android-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -18638,6 +18755,19 @@
       }
     },
     "net9.0-ios26.0/iossimulator-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -19424,6 +19554,19 @@
       }
     },
     "net9.0-ios26.0/maccatalyst-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -20210,6 +20353,19 @@
       }
     },
     "net9.0-ios26.0/win10-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -20996,6 +21152,19 @@
       }
     },
     "net9.0-maccatalyst26.0": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -21880,6 +22049,19 @@
       }
     },
     "net9.0-maccatalyst26.0/android-arm64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -22673,6 +22855,19 @@
       }
     },
     "net9.0-maccatalyst26.0/android-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -23466,6 +23661,19 @@
       }
     },
     "net9.0-maccatalyst26.0/iossimulator-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -24256,6 +24464,19 @@
       }
     },
     "net9.0-maccatalyst26.0/maccatalyst-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -25049,6 +25270,19 @@
       }
     },
     "net9.0-maccatalyst26.0/win10-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -25839,6 +26073,19 @@
       }
     },
     "net9.0-windows10.0.19041": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -26973,6 +27220,19 @@
       }
     },
     "net9.0-windows10.0.19041/android-arm64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -27954,6 +28214,19 @@
       }
     },
     "net9.0-windows10.0.19041/android-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -28935,6 +29208,19 @@
       }
     },
     "net9.0-windows10.0.19041/iossimulator-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -29913,6 +30199,19 @@
       }
     },
     "net9.0-windows10.0.19041/maccatalyst-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -30894,6 +31193,19 @@
       }
     },
     "net9.0-windows10.0.19041/win10-x64": {
+      "Markdig/0.44.0": {
+        "type": "package",
+        "compile": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net9.0/Markdig.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.AspNetCore.Authorization/9.0.8": {
         "type": "package",
         "dependencies": {
@@ -31902,6 +32214,29 @@
         "lib/net8.0-android34.0/GoogleGson.dll",
         "lib/net8.0-android34.0/GoogleGson.pdb",
         "lib/net8.0-android34.0/GoogleGson.xml",
+        "readme.md"
+      ]
+    },
+    "Markdig/0.44.0": {
+      "sha512": "X+CYMjcUnh/yO24wOSQxVFLiGqWrrtXJ5M7toHiM1Zk4Fg9UMLN5fkaq6FSOWH+mIprsHHgDMlq3MJhmrXalhg==",
+      "type": "package",
+      "path": "markdig/0.44.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net462/Markdig.dll",
+        "lib/net462/Markdig.xml",
+        "lib/net8.0/Markdig.dll",
+        "lib/net8.0/Markdig.xml",
+        "lib/net9.0/Markdig.dll",
+        "lib/net9.0/Markdig.xml",
+        "lib/netstandard2.0/Markdig.dll",
+        "lib/netstandard2.0/Markdig.xml",
+        "lib/netstandard2.1/Markdig.dll",
+        "lib/netstandard2.1/Markdig.xml",
+        "markdig.0.44.0.nupkg.sha512",
+        "markdig.nuspec",
+        "markdig.png",
         "readme.md"
       ]
     },
@@ -36425,6 +36760,7 @@
   },
   "projectFileDependencyGroups": {
     "net9.0-android35.0": [
+      "Markdig >= 0.44.0",
       "Microsoft.AspNetCore.Components.WebView.Maui >= 9.0.111",
       "Microsoft.Extensions.Logging.Debug >= 9.0.8",
       "Microsoft.Maui.Controls >= 9.0.111",
@@ -36433,6 +36769,7 @@
       "sqlite-net-pcl >= 1.9.172"
     ],
     "net9.0-ios26.0": [
+      "Markdig >= 0.44.0",
       "Microsoft.AspNetCore.Components.WebView.Maui >= 9.0.111",
       "Microsoft.Extensions.Logging.Debug >= 9.0.8",
       "Microsoft.Maui.Controls >= 9.0.111",
@@ -36441,6 +36778,7 @@
       "sqlite-net-pcl >= 1.9.172"
     ],
     "net9.0-maccatalyst26.0": [
+      "Markdig >= 0.44.0",
       "Microsoft.AspNetCore.Components.WebView.Maui >= 9.0.111",
       "Microsoft.Extensions.Logging.Debug >= 9.0.8",
       "Microsoft.Maui.Controls >= 9.0.111",
@@ -36449,6 +36787,7 @@
       "sqlite-net-pcl >= 1.9.172"
     ],
     "net9.0-windows10.0.19041": [
+      "Markdig >= 0.44.0",
       "Microsoft.AspNetCore.Components.WebView.Maui >= 9.0.111",
       "Microsoft.Extensions.Logging.Debug >= 9.0.8",
       "Microsoft.Maui.Controls >= 9.0.111",
@@ -36523,6 +36862,10 @@
       "net9.0-android35.0": {
         "targetAlias": "net9.0-android",
         "dependencies": {
+          "Markdig": {
+            "target": "Package",
+            "version": "[0.44.0, )"
+          },
           "Microsoft.AspNetCore.Components.WebView.Maui": {
             "target": "Package",
             "version": "[9.0.111, )"
@@ -36580,6 +36923,10 @@
       "net9.0-ios26.0": {
         "targetAlias": "net9.0-ios",
         "dependencies": {
+          "Markdig": {
+            "target": "Package",
+            "version": "[0.44.0, )"
+          },
           "Microsoft.AspNetCore.Components.WebView.Maui": {
             "target": "Package",
             "version": "[9.0.111, )"
@@ -36637,6 +36984,10 @@
       "net9.0-maccatalyst26.0": {
         "targetAlias": "net9.0-maccatalyst",
         "dependencies": {
+          "Markdig": {
+            "target": "Package",
+            "version": "[0.44.0, )"
+          },
           "Microsoft.AspNetCore.Components.WebView.Maui": {
             "target": "Package",
             "version": "[9.0.111, )"
@@ -36695,6 +37046,10 @@
       "net9.0-windows10.0.19041": {
         "targetAlias": "net9.0-windows10.0.19041.0",
         "dependencies": {
+          "Markdig": {
+            "target": "Package",
+            "version": "[0.44.0, )"
+          },
           "Microsoft.AspNetCore.Components.WebView.Maui": {
             "target": "Package",
             "version": "[9.0.111, )"

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿
+using Microsoft.Extensions.Logging;
 using ReflektJournal.Data;
 using ReflektJournal.Services;
 using ReflektJournal.Services.Interfaces;
@@ -28,6 +29,8 @@ public static class MauiProgram
 
         builder.Services.AddSingleton<ReflektDatabase>();
 
+        builder.Services.AddSingleton<IToastService, ToastService>();
+
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<IJournalService, JournalService>();
         builder.Services.AddSingleton<IMoodService, MoodService>();
@@ -35,6 +38,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<ICategoryService, CategoryService>();
         builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
         builder.Services.AddSingleton<IPdfExportService, PdfExportService>();
+        builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
+
 
         return builder.Build();
     }

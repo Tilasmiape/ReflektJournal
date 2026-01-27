@@ -4,6 +4,7 @@ public class MonoPackageManager_Resources {
 		/* We need to ensure that "ReflektJournal.dll" comes first in this list. */
 		"ReflektJournal.dll",
 		"GoogleGson.dll",
+		"Markdig.dll",
 		"Microsoft.AspNetCore.Authorization.dll",
 		"Microsoft.AspNetCore.Components.dll",
 		"Microsoft.AspNetCore.Components.Forms.dll",
@@ -164,6 +165,7 @@ public class MonoPackageManager_Resources {
 		"Microsoft.Maui.Controls.resources.dll",
 		"_Microsoft.Android.Resource.Designer.dll",
 		"GoogleGson.dll",
+		"Markdig.dll",
 		"Microsoft.AspNetCore.Authorization.dll",
 		"Microsoft.AspNetCore.Components.dll",
 		"Microsoft.AspNetCore.Components.Forms.dll",

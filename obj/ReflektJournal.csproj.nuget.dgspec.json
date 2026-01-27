@@ -67,6 +67,10 @@
         "net9.0-android35.0": {
           "targetAlias": "net9.0-android",
           "dependencies": {
+            "Markdig": {
+              "target": "Package",
+              "version": "[0.44.0, )"
+            },
             "Microsoft.AspNetCore.Components.WebView.Maui": {
               "target": "Package",
               "version": "[9.0.111, )"
@@ -124,6 +128,10 @@
         "net9.0-ios26.0": {
           "targetAlias": "net9.0-ios",
           "dependencies": {
+            "Markdig": {
+              "target": "Package",
+              "version": "[0.44.0, )"
+            },
             "Microsoft.AspNetCore.Components.WebView.Maui": {
               "target": "Package",
               "version": "[9.0.111, )"
@@ -181,6 +189,10 @@
         "net9.0-maccatalyst26.0": {
           "targetAlias": "net9.0-maccatalyst",
           "dependencies": {
+            "Markdig": {
+              "target": "Package",
+              "version": "[0.44.0, )"
+            },
             "Microsoft.AspNetCore.Components.WebView.Maui": {
               "target": "Package",
               "version": "[9.0.111, )"
@@ -239,6 +251,10 @@
         "net9.0-windows10.0.19041": {
           "targetAlias": "net9.0-windows10.0.19041.0",
           "dependencies": {
+            "Markdig": {
+              "target": "Package",
+              "version": "[0.44.0, )"
+            },
             "Microsoft.AspNetCore.Components.WebView.Maui": {
               "target": "Package",
               "version": "[9.0.111, )"

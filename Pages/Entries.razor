@@ -1,0 +1,347 @@
+﻿@page "/entries"
+
+@using ReflektJournal.Models
+@using Markdig
+
+@inject ReflektJournal.Services.Interfaces.IAuthService Auth
+@inject ReflektJournal.Services.Interfaces.IJournalService Journal
+@inject ReflektJournal.Services.Interfaces.IMoodService MoodService
+@inject ReflektJournal.Services.Interfaces.ITagService TagService
+@inject ReflektJournal.Services.Interfaces.IToastService Toast
+@inject NavigationManager Nav
+
+<h1 class="title">My Timeline</h1>
+<p class="subtitle">Tracing the echoes of your journey through time.</p>
+
+@if (!_ready)
+{
+    <div class="center">Loading...</div>
+}
+else
+{
+    <div class="toolbar">
+        <div class="filters">
+            <div class="f">
+                <div class="lbl">MONTH/YEAR</div>
+                <input class="inp" type="month" value="@_monthFilter" @onchange="OnMonthChanged" />
+            </div>
+
+            <div class="f">
+                <div class="lbl">ENERGY</div>
+                <select class="sel" value="@_energyFilter" @onchange="OnEnergyChanged">
+                    @foreach (var m in _energyOptions)
+                    {
+                        <option value="@m">@m</option>
+                    }
+                </select>
+            </div>
+
+            <div class="f">
+                <div class="lbl">TITLE</div>
+                <input class="inp" placeholder="Search title..." value="@_titleFilter" @oninput="OnTitleInput" />
+            </div>
+
+            <div class="f">
+                <div class="lbl">TAG</div>
+                <select class="sel" value="@_tagFilter" @onchange="OnTagChanged">
+                    @foreach (var t in _tagOptions)
+                    {
+                        <option value="@t">@t</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <button class="export" type="button" @onclick="ExportPdfAsync">Export PDF</button>
+    </div>
+
+    @if (_cards.Count == 0)
+    {
+        <div class="empty">
+            <div class="emptyIcon">📝</div>
+            <div class="emptyTitle">No entries yet</div>
+            <div class="emptySub">Write your first entry to see it here.</div>
+            <button class="primary" @onclick="@(() => Nav.NavigateTo("/today"))">Write My First Entry</button>
+        </div>
+    }
+    else
+    {
+        <div class="timeline">
+            @foreach (var c in _cards)
+            {
+                <div class="card">
+                    <div class="head">
+                        <div class="meta">
+                            <div class="metaLeft">
+                                <span class="emoji">@c.PrimaryEmoji</span>
+                                <div class="dateStack">
+                                    <div class="date">@c.DateIso</div>
+                                    @if (!string.IsNullOrWhiteSpace(c.SecondaryMoodLabel))
+                                    {
+                                        <div class="mood">@c.SecondaryMoodLabel</div>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="actions">
+                                <button class="icon" title="Edit" type="button" @onclick="@(() => EditEntry(c))">✎</button>
+                                <button class="icon danger" title="Delete" type="button" @onclick="@(() => ConfirmDelete(c))">🗑</button>
+                            </div>
+                        </div>
+
+                        <div class="cardTitle">@c.Title</div>
+
+                        @if (c.Tags.Count > 0)
+                        {
+                            <div class="tagRow">
+                                @foreach (var tag in c.Tags)
+                                {
+                                    <span class="pill">@tag</span>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="preview">
+                        @((MarkupString)c.PreviewHtml)
+                    </div>
+
+                    <div class="foot">
+                        <div class="words">@c.WordCount words recorded</div>
+                        <button class="link" type="button" @onclick="@(() => Nav.NavigateTo($"/today?date={c.DateIso}&edit=1"))">
+                            CONTINUE READING →
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+}
+
+@if (_deleteTarget is not null)
+{
+    <div class="backdrop" @onclick="CancelDelete">
+        <div class="modal" @onclick:stopPropagation="true">
+            <div class="mt">Delete entry?</div>
+            <div class="ms">This will permanently remove the entry.</div>
+            <div class="ma">
+                <button class="btn" type="button" @onclick="CancelDelete">Cancel</button>
+                <button class="btn danger" type="button" @onclick="DeleteConfirmedAsync">Delete</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _ready;
+
+    private string _monthFilter = "";
+    private string _energyFilter = "Any Mood";
+    private string _titleFilter = "";
+    private string _tagFilter = "Any Tag";
+
+    private List<string> _energyOptions = new() { "Any Mood" };
+    private List<string> _tagOptions = new() { "Any Tag" };
+
+    private List<EntryCard> _allCards = new();
+    private List<EntryCard> _cards = new();
+
+    private EntryCard? _deleteTarget;
+
+    private readonly MarkdownPipeline _md = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .DisableHtml()
+        .Build();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Auth.GetUserAsync();
+        if (user is null)
+        {
+            Nav.NavigateTo("/signup", replace: true);
+            return;
+        }
+
+        var moods = (await MoodService.ListAsync()).ToList();
+        _energyOptions = new List<string> { "Any Mood" };
+        _energyOptions.AddRange(
+            moods.Where(m => !m.IsPrimary)
+                 .Select(m => m.Name)
+                 .Distinct(StringComparer.OrdinalIgnoreCase)
+                 .OrderBy(n => n)
+        );
+
+        var tags = (await TagService.ListAsync()).ToList();
+        _tagOptions = new List<string> { "Any Tag" };
+        _tagOptions.AddRange(tags.Select(t => t.Name).OrderBy(n => n));
+
+        await LoadCardsAsync(user.Id);
+        ApplyFilters();
+
+        _ready = true;
+    }
+
+    private async Task LoadCardsAsync(int userId)
+    {
+        var entries = await Journal.ListAsync(userId);
+        var moodLookup = (await MoodService.ListAsync()).ToDictionary(m => m.Id, m => m);
+
+        var cards = new List<EntryCard>();
+
+        foreach (var e in entries)
+        {
+            var moodState = await MoodService.GetEntryMoodsAsync(e.Id);
+
+            var primaryEmoji = "😐";
+            if (moodState.PrimaryMoodId is not null && moodLookup.TryGetValue(moodState.PrimaryMoodId.Value, out var pm))
+                primaryEmoji = PrimaryEmoji(pm.GroupKey);
+
+            var secondaryNames = moodState.SecondaryMoodIds
+                .Select(id => moodLookup.TryGetValue(id, out var sm) ? sm.Name : null)
+                .Where(n => !string.IsNullOrWhiteSpace(n))
+                .ToList()!;
+
+            var secondaryLabel = secondaryNames.FirstOrDefault() ?? "";
+
+            var tagNames = (await TagService.ListTagsForEntryAsync(e.Id))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .OrderBy(t => t)
+                .ToList();
+
+            cards.Add(new EntryCard
+            {
+                Id = e.Id,
+                DateIso = e.DateIso,
+                Title = e.Title,
+                WordCount = e.WordCount,
+                PrimaryEmoji = primaryEmoji,
+                SecondaryMoodLabel = secondaryLabel,
+                SecondaryMoodNames = secondaryNames,
+                Tags = tagNames,
+                PreviewHtml = RenderPreviewHtml(e.ContentMarkdown ?? "")
+            });
+        }
+
+        _allCards = cards;
+    }
+
+    private void ApplyFilters()
+    {
+        IEnumerable<EntryCard> q = _allCards;
+
+        if (!string.IsNullOrWhiteSpace(_monthFilter))
+        {
+            var ym = _monthFilter.Trim(); // yyyy-MM
+            q = q.Where(c => c.DateIso.StartsWith(ym, StringComparison.Ordinal));
+        }
+
+        if (!string.Equals(_energyFilter, "Any Mood", StringComparison.Ordinal))
+        {
+            q = q.Where(c => c.SecondaryMoodNames.Any(n => string.Equals(n, _energyFilter, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(_titleFilter))
+        {
+            q = q.Where(c => c.Title.Contains(_titleFilter.Trim(), StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.Equals(_tagFilter, "Any Tag", StringComparison.Ordinal))
+        {
+            q = q.Where(c => c.Tags.Any(t => string.Equals(t, _tagFilter, StringComparison.OrdinalIgnoreCase)));
+        }
+
+        _cards = q.ToList();
+        StateHasChanged();
+    }
+
+    private void OnMonthChanged(ChangeEventArgs e)
+    {
+        _monthFilter = e.Value?.ToString() ?? "";
+        ApplyFilters();
+    }
+
+    private void OnEnergyChanged(ChangeEventArgs e)
+    {
+        _energyFilter = e.Value?.ToString() ?? "Any Mood";
+        ApplyFilters();
+    }
+
+    private void OnTagChanged(ChangeEventArgs e)
+    {
+        _tagFilter = e.Value?.ToString() ?? "Any Tag";
+        ApplyFilters();
+    }
+
+    private void OnTitleInput(ChangeEventArgs e)
+    {
+        _titleFilter = e.Value?.ToString() ?? "";
+        ApplyFilters();
+    }
+
+    private string RenderPreviewHtml(string markdown)
+    {
+        var raw = markdown ?? "";
+        if (raw.Length > 380) raw = raw[..380] + "…";
+        return Markdig.Markdown.ToHtml(raw, _md);
+    }
+
+    private Task ExportPdfAsync()
+    {
+        Toast.Info("Export PDF will be wired next.");
+        return Task.CompletedTask;
+    }
+
+    private void EditEntry(EntryCard c)
+    {
+        Nav.NavigateTo($"/today?date={c.DateIso}&edit=1");
+    }
+
+    private void ConfirmDelete(EntryCard c) => _deleteTarget = c;
+    private void CancelDelete() => _deleteTarget = null;
+
+    private async Task DeleteConfirmedAsync()
+    {
+        if (_deleteTarget is null) return;
+
+        try
+        {
+            await Journal.DeleteAsync(_deleteTarget.Id);
+            Toast.Success("Entry deleted.");
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Failed to delete: {ex.Message}");
+        }
+
+
+        _deleteTarget = null;
+
+        var user = await Auth.GetUserAsync();
+        if (user is not null)
+        {
+            await LoadCardsAsync(user.Id);
+            ApplyFilters();
+        }
+    }
+
+    private static string PrimaryEmoji(string groupKey) => groupKey switch
+    {
+        "Positive" => "😊",
+        "Neutral" => "😐",
+        "Negative" => "😟",
+        _ => "😐"
+    };
+
+    private sealed class EntryCard
+    {
+        public int Id { get; init; }
+        public string DateIso { get; init; } = "";
+        public string Title { get; init; } = "";
+        public int WordCount { get; init; }
+        public string PrimaryEmoji { get; init; } = "😐";
+        public string SecondaryMoodLabel { get; init; } = "";
+        public List<string> SecondaryMoodNames { get; init; } = new();
+        public List<string> Tags { get; init; } = new();
+        public string PreviewHtml { get; init; } = "";
+    }
+}

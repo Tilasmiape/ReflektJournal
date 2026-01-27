@@ -21,6 +21,10 @@
       "PackagePath": "staticwebassets\\index.html"
     },
     {
+      "Id": "C:\\Users\\Tilasmi Subedi\\source\\repos\\ReflektJournal\\ReflektJournal\\wwwroot\\js\\mdEditor.js",
+      "PackagePath": "staticwebassets\\js\\mdEditor.js"
+    },
+    {
       "Id": "obj\\Debug\\net9.0-maccatalyst\\maccatalyst-x64\\staticwebassets\\msbuild.ReflektJournal.Microsoft.AspNetCore.StaticWebAssetEndpoints.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssetEndpoints.props"
     },
