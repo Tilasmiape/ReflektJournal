@@ -1,5 +1,4 @@
 ﻿@page "/entries"
-
 @using ReflektJournal.Models
 @using Markdig
 
@@ -23,12 +22,16 @@ else
         <div class="filters">
             <div class="f">
                 <div class="lbl">MONTH/YEAR</div>
-                <input class="inp" type="month" value="@_monthFilter" @onchange="OnMonthChanged" />
+                <input class="inp" type="month"
+                       @bind="_monthFilter"
+                       @bind:after="ApplyFilters" />
             </div>
 
             <div class="f">
                 <div class="lbl">ENERGY</div>
-                <select class="sel" value="@_energyFilter" @onchange="OnEnergyChanged">
+                <select class="sel"
+                        @bind="_energyFilter"
+                        @bind:after="ApplyFilters">
                     @foreach (var m in _energyOptions)
                     {
                         <option value="@m">@m</option>
@@ -38,12 +41,17 @@ else
 
             <div class="f">
                 <div class="lbl">TITLE</div>
-                <input class="inp" placeholder="Search title..." value="@_titleFilter" @oninput="OnTitleInput" />
+                <input class="inp" placeholder="Search title..."
+                       @bind-value="_titleFilter"
+                       @bind-value:event="oninput"
+                       @bind-value:after="ApplyFilters" />
             </div>
 
             <div class="f">
                 <div class="lbl">TAG</div>
-                <select class="sel" value="@_tagFilter" @onchange="OnTagChanged">
+                <select class="sel"
+                        @bind="_tagFilter"
+                        @bind:after="ApplyFilters">
                     @foreach (var t in _tagOptions)
                     {
                         <option value="@t">@t</option>
@@ -69,38 +77,40 @@ else
         <div class="timeline">
             @foreach (var c in _cards)
             {
-                <div class="card">
+                <div class="card" @key="c.Id">
                     <div class="head">
-                        <div class="meta">
-                            <div class="metaLeft">
-                                <span class="emoji">@c.PrimaryEmoji</span>
-                                <div class="dateStack">
-                                    <div class="date">@c.DateIso</div>
-                                    @if (!string.IsNullOrWhiteSpace(c.SecondaryMoodLabel))
-                                    {
-                                        <div class="mood">@c.SecondaryMoodLabel</div>
-                                    }
-                                </div>
-                            </div>
-
-                            <div class="actions">
-                                <button class="icon" title="Edit" type="button" @onclick="@(() => EditEntry(c))">✎</button>
-                                <button class="icon danger" title="Delete" type="button" @onclick="@(() => ConfirmDelete(c))">🗑</button>
-                            </div>
+                        <div class="metaLeft">
+                            <span class="emoji">@c.PrimaryEmoji</span>
+                            <div class="date">@c.DateIso</div>
+                            @if (!string.IsNullOrWhiteSpace(c.SecondaryMoodLabel))
+                            {
+                                <div class="mood">@c.SecondaryMoodLabel</div>
+                            }
                         </div>
 
-                        <div class="cardTitle">@c.Title</div>
-
-                        @if (c.Tags.Count > 0)
-                        {
-                            <div class="tagRow">
-                                @foreach (var tag in c.Tags)
-                                {
-                                    <span class="pill">@tag</span>
-                                }
-                            </div>
-                        }
+                        <div class="actions">
+                            <button class="icon" title="Edit" type="button"
+                                    @onclick="@(() => Nav.NavigateTo($"/today?date={c.DateIso}&edit=1"))">
+                                ✎
+                            </button>
+                            <button class="icon danger" title="Delete" type="button"
+                                    @onclick="@(() => ConfirmDelete(c))">
+                                🗑
+                            </button>
+                        </div>
                     </div>
+
+                    <div class="cardTitle">@c.Title</div>
+
+                    @if (c.Tags.Count > 0)
+                    {
+                        <div class="tagRow">
+                            @foreach (var tag in c.Tags)
+                            {
+                                <span class="pill">@tag</span>
+                            }
+                        </div>
+                    }
 
                     <div class="preview">
                         @((MarkupString)c.PreviewHtml)
@@ -108,7 +118,8 @@ else
 
                     <div class="foot">
                         <div class="words">@c.WordCount words recorded</div>
-                        <button class="link" type="button" @onclick="@(() => Nav.NavigateTo($"/today?date={c.DateIso}&edit=1"))">
+                        <button class="link" type="button"
+                                @onclick="@(() => Nav.NavigateTo($"/today?date={c.DateIso}&edit=1"))">
                             CONTINUE READING →
                         </button>
                     </div>
@@ -167,13 +178,14 @@ else
         _energyOptions.AddRange(
             moods.Where(m => !m.IsPrimary)
                  .Select(m => m.Name)
+                 .Where(n => !string.IsNullOrWhiteSpace(n))
                  .Distinct(StringComparer.OrdinalIgnoreCase)
                  .OrderBy(n => n)
         );
 
         var tags = (await TagService.ListAsync()).ToList();
         _tagOptions = new List<string> { "Any Tag" };
-        _tagOptions.AddRange(tags.Select(t => t.Name).OrderBy(n => n));
+        _tagOptions.AddRange(tags.Select(t => t.Name).Where(n => !string.IsNullOrWhiteSpace(n)).OrderBy(n => n));
 
         await LoadCardsAsync(user.Id);
         ApplyFilters();
@@ -199,11 +211,13 @@ else
             var secondaryNames = moodState.SecondaryMoodIds
                 .Select(id => moodLookup.TryGetValue(id, out var sm) ? sm.Name : null)
                 .Where(n => !string.IsNullOrWhiteSpace(n))
-                .ToList()!;
+                .Select(n => n!)
+                .ToList();
 
             var secondaryLabel = secondaryNames.FirstOrDefault() ?? "";
 
             var tagNames = (await TagService.ListTagsForEntryAsync(e.Id))
+                .Where(t => !string.IsNullOrWhiteSpace(t))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .OrderBy(t => t)
                 .ToList();
@@ -237,7 +251,8 @@ else
 
         if (!string.Equals(_energyFilter, "Any Mood", StringComparison.Ordinal))
         {
-            q = q.Where(c => c.SecondaryMoodNames.Any(n => string.Equals(n, _energyFilter, StringComparison.OrdinalIgnoreCase)));
+            q = q.Where(c => c.SecondaryMoodNames.Any(n =>
+                string.Equals(n, _energyFilter, StringComparison.OrdinalIgnoreCase)));
         }
 
         if (!string.IsNullOrWhiteSpace(_titleFilter))
@@ -254,30 +269,6 @@ else
         StateHasChanged();
     }
 
-    private void OnMonthChanged(ChangeEventArgs e)
-    {
-        _monthFilter = e.Value?.ToString() ?? "";
-        ApplyFilters();
-    }
-
-    private void OnEnergyChanged(ChangeEventArgs e)
-    {
-        _energyFilter = e.Value?.ToString() ?? "Any Mood";
-        ApplyFilters();
-    }
-
-    private void OnTagChanged(ChangeEventArgs e)
-    {
-        _tagFilter = e.Value?.ToString() ?? "Any Tag";
-        ApplyFilters();
-    }
-
-    private void OnTitleInput(ChangeEventArgs e)
-    {
-        _titleFilter = e.Value?.ToString() ?? "";
-        ApplyFilters();
-    }
-
     private string RenderPreviewHtml(string markdown)
     {
         var raw = markdown ?? "";
@@ -289,11 +280,6 @@ else
     {
         Toast.Info("Export PDF will be wired next.");
         return Task.CompletedTask;
-    }
-
-    private void EditEntry(EntryCard c)
-    {
-        Nav.NavigateTo($"/today?date={c.DateIso}&edit=1");
     }
 
     private void ConfirmDelete(EntryCard c) => _deleteTarget = c;
@@ -312,7 +298,6 @@ else
         {
             Toast.Error($"Failed to delete: {ex.Message}");
         }
-
 
         _deleteTarget = null;
 

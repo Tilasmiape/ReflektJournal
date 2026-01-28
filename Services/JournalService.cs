@@ -13,78 +13,54 @@ public sealed class JournalService : IJournalService
 
     public async Task<JournalEntry?> GetByDateAsync(string dateIso)
     {
-        await _db.InitializeAsync().ConfigureAwait(false);
-
-        // Single-user device scenario: DateIso is enough
+        // Note: If you want per-user uniqueness, enforce it in Today.razor
         return await _db.Conn.Table<JournalEntry>()
-            .Where(e => e.DateIso == dateIso)
+            .Where(x => x.DateIso == dateIso)
             .FirstOrDefaultAsync()
             .ConfigureAwait(false);
     }
 
+    public async Task<JournalEntry?> GetByIdAsync(int id)
+    {
+        return await _db.Conn.Table<JournalEntry>()
+            .Where(x => x.Id == id)
+            .FirstOrDefaultAsync()
+            .ConfigureAwait(false);
+    }
+
+    // ✅ FIX: return type matches interface (IReadOnlyList)
     public async Task<List<JournalEntry>> ListAsync(int userId)
     {
-        await _db.InitializeAsync().ConfigureAwait(false);
-
         var list = await _db.Conn.Table<JournalEntry>()
-            .Where(e => e.UserId == userId)
+            .Where(x => x.UserId == userId)
+            .OrderByDescending(x => x.DateIso)
+            .ThenByDescending(x => x.Id)
             .ToListAsync()
             .ConfigureAwait(false);
 
-        return list
-            .OrderByDescending(e => e.DateIso)
-            .ThenByDescending(e => e.Id)
-            .ToList();
+        return list;
     }
 
     public async Task<int> UpsertAsync(JournalEntry entry)
     {
-        await _db.InitializeAsync().ConfigureAwait(false);
-
-        if (entry.Id > 0)
+        if (entry.Id == 0)
         {
-            await _db.Conn.UpdateAsync(entry).ConfigureAwait(false);
+            await _db.Conn.InsertAsync(entry).ConfigureAwait(false);
             return entry.Id;
         }
 
-        // If Id is not set, update by (UserId + DateIso) if exists
-        var existing = await _db.Conn.Table<JournalEntry>()
-            .Where(e => e.UserId == entry.UserId && e.DateIso == entry.DateIso)
-            .FirstOrDefaultAsync()
-            .ConfigureAwait(false);
-
-        if (existing is not null)
-        {
-            entry.Id = existing.Id;
-            await _db.Conn.UpdateAsync(entry).ConfigureAwait(false);
-            return entry.Id;
-        }
-
-        await _db.Conn.InsertAsync(entry).ConfigureAwait(false);
+        await _db.Conn.UpdateAsync(entry).ConfigureAwait(false);
         return entry.Id;
     }
 
-    public async Task DeleteAsync(int entryId)
+    public async Task DeleteAsync(int id)
     {
-        await _db.InitializeAsync().ConfigureAwait(false);
-
-        // Delete join rows safely using sqlite-net types (no column-name guessing)
-        var moods = await _db.Conn.Table<EntryMood>()
-            .Where(x => x.EntryId == entryId)
-            .ToListAsync()
-            .ConfigureAwait(false);
-
-        foreach (var m in moods)
-            await _db.Conn.DeleteAsync(m).ConfigureAwait(false);
-
-        var tags = await _db.Conn.Table<EntryTag>()
-            .Where(x => x.EntryId == entryId)
-            .ToListAsync()
-            .ConfigureAwait(false);
-
-        foreach (var t in tags)
-            await _db.Conn.DeleteAsync(t).ConfigureAwait(false);
-
-        await _db.Conn.DeleteAsync<JournalEntry>(entryId).ConfigureAwait(false);
+        // ✅ Delete join rows too so filters + lookups stay consistent
+        await _db.Conn.RunInTransactionAsync(conn =>
+        {
+            conn.Execute("DELETE FROM entry_moods WHERE EntryId = ?", id);
+            conn.Execute("DELETE FROM entry_tags WHERE EntryId = ?", id);
+            conn.Delete<JournalEntry>(id);
+        }).ConfigureAwait(false);
     }
 }

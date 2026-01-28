@@ -112,12 +112,12 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName>ScopedCss</AssetTraitName>
       <AssetTraitValue>ApplicationBundle</AssetTraitValue>
-      <Fingerprint>9343i94rrz</Fingerprint>
-      <Integrity>dU0TkIbsnWgsI4wewx8VdRRV5qM6fp3vQYTNN0EzJ/A=</Integrity>
+      <Fingerprint>lxfsm0y0hq</Fingerprint>
+      <Integrity>qTVRsJ5xM5xdcKLandMemofa3GRP5RuzTv1drI+jrzQ=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <FileLength>17722</FileLength>
-      <LastWriteTime>Tue, 27 Jan 2026 05:19:59 GMT</LastWriteTime>
+      <FileLength>17760</FileLength>
+      <LastWriteTime>Tue, 27 Jan 2026 14:09:12 GMT</LastWriteTime>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ReflektJournal.styles.css'))</OriginalItemSpec>
     </StaticWebAsset>
   </ItemGroup>

@@ -1,5 +1,4 @@
-﻿
-using ReflektJournal.Data;
+﻿using ReflektJournal.Data;
 
 namespace ReflektJournal;
 
@@ -11,11 +10,16 @@ public partial class App : Application
     {
         InitializeComponent();
         _db = db;
-        _ = _db.InitializeAsync();
+
+        // Initialize database asynchronously
+        Task.Run(async () => await _db.InitializeAsync());
     }
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
-        return new Window(new MainPage());
+        return new Window(new MainPage())
+        {
+            Title = "ReflektJournal"
+        };
     }
 }

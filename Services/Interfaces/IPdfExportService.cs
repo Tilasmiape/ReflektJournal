@@ -1,7 +1,18 @@
-﻿namespace ReflektJournal.Services.Interfaces;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace ReflektJournal.Services.Interfaces;
 
 public interface IPdfExportService
 {
-    // Commit later: generate Journal Archives PDF
-    Task<byte[]> ExportPdfAsync();
+    Task<string> ExportTimelineAsync(IReadOnlyList<ExportCard> cards);
+
+    public sealed class ExportCard
+    {
+        public string DateIso { get; init; } = "";
+        public string Title { get; init; } = "";
+        public string Mood { get; init; } = "";
+        public IReadOnlyList<string> Tags { get; init; } = [];
+        public string ContentMarkdown { get; init; } = "";
+    }
 }

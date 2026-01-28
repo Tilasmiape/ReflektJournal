@@ -1,5 +1,5 @@
 ﻿
-using ReflektJournal.Data.Models;
+
 using ReflektJournal.Models;
 using SQLite;
 
@@ -50,8 +50,8 @@ public sealed class ReflektDatabase
         // Removing these tables is OK early dev; do real migrations later.
         await Conn.ExecuteAsync("DROP TABLE IF EXISTS moods").ConfigureAwait(false);
         await Conn.ExecuteAsync("DROP TABLE IF EXISTS tags").ConfigureAwait(false);
-        await Conn.ExecuteAsync("DROP TABLE IF EXISTS entry_moods").ConfigureAwait(false);
-        await Conn.ExecuteAsync("DROP TABLE IF EXISTS entry_tags").ConfigureAwait(false);
+        //    await Conn.ExecuteAsync("DROP TABLE IF EXISTS entry_moods").ConfigureAwait(false);
+        //    await Conn.ExecuteAsync("DROP TABLE IF EXISTS entry_tags").ConfigureAwait(false);
     }
 
     private async Task EnsureSingletonSettingsRowAsync()

@@ -2,75 +2,40 @@
 @page "/entry/{Id:int}"
 
 @using ReflektJournal.Models
-@using ReflektJournal.Data
+@using ReflektJournal.Services.Interfaces
 @using Markdig
-@inject ReflektDatabase Db
-@inject ReflektJournal.Services.Interfaces.IAuthService Auth
-@inject ReflektJournal.Services.Interfaces.IMoodService MoodService
-@inject ReflektJournal.Services.Interfaces.ITagService TagService
-@inject ReflektJournal.Services.Interfaces.IToastService Toast
+
+@inject IAuthService Auth
+@inject IJournalService Journal
+@inject IToastService Toast
 @inject NavigationManager Nav
+
+<h1 class="entry-title">Entry</h1>
 
 @if (!_ready)
 {
-    <div class="center">Loading…</div>
+    <div class="center">Loading...</div>
 }
-else if (_notFound)
+else if (_entry is null)
 {
-    <div class="center">Entry not found.</div>
+    <div class="panel">
+        <div class="panel-title">Entry not found</div>
+        <button class="btn" type="button" @onclick="@(() => Nav.NavigateTo("/entries"))">Back to Entries</button>
+    </div>
 }
 else
 {
-    <div class="wrap">
-        <div class="top">
-            <div>
-                <h1 class="h">@_dateIso</h1>
-                <div class="sub">Edit entry</div>
-            </div>
-            <div class="top-actions">
-                <button class="btn outline" type="button" @onclick="@(() => Nav.NavigateTo("/entries"))">Back</button>
-                <button class="btn primary" type="button" @onclick="SaveAsync" disabled="@_saving">@(_saving ? "Saving…" : "Save")</button>
-            </div>
+    <div class="card">
+        <div class="meta">@_entry.DateIso</div>
+        <div class="title">@_entry.Title</div>
+
+        <div class="actions">
+            <button class="btn" type="button" @onclick="Edit">Edit</button>
+            <button class="btn danger" type="button" @onclick="DeleteAsync">Delete</button>
         </div>
 
-        <div class="grid">
-            <div class="panel">
-                <div class="label">JOURNAL TITLE *</div>
-                <input class="control" @bind="_title" />
-
-                <div class="label mt">PRIMARY MOOD *</div>
-                <select class="control" @onchange="OnPrimaryChanged" value="@(_primaryMoodId?.ToString() ?? "")">
-                    <option value="">Select primary mood</option>
-                    @foreach (var pm in _primaryMoods)
-                    {
-                        <option value="@pm.Id">@pm.Name</option>
-                    }
-                </select>
-
-                <div class="label mt">SPECIFIC EMOTIONS (1–2) *</div>
-                <div class="chips">
-                    @foreach (var sm in _secondaryMoods)
-                    {
-                        var active = _secondaryMoodIds.Contains(sm.Id);
-                        <button class="chip @(active ? "active" : "")" type="button" @onclick="@(() => ToggleSecondary(sm.Id))">
-                            @sm.Name
-                        </button>
-                    }
-                </div>
-
-                <div class="label mt">TAGS (comma separated)</div>
-                <input class="control" @bind="_tagsCsv" placeholder="work, birthday, custom…" />
-
-                <div class="label mt">ENTRY (Markdown)</div>
-                <textarea class="textarea" @bind="_content"></textarea>
-            </div>
-
-            <div class="panel">
-                <div class="label">PREVIEW</div>
-                <div class="preview">
-                    @((MarkupString)_previewHtml)
-                </div>
-            </div>
+        <div class="content">
+            @((MarkupString)_html)
         </div>
     </div>
 }
@@ -79,204 +44,138 @@ else
     [Parameter] public int Id { get; set; }
 
     private bool _ready;
-    private bool _notFound;
-    private bool _saving;
+    private JournalEntry? _entry;
+    private string _html = "";
 
-    private int _userId;
-    private string _dateIso = "";
-
-    private string _title = "";
-    private string _content = "";
-    private string _tagsCsv = "";
-
-    private int? _primaryMoodId;
-    private readonly HashSet<int> _secondaryMoodIds = new();
-
-    private List<Mood> _allMoods = new();
-    private List<Mood> _primaryMoods = new();
-    private List<Mood> _secondaryMoods = new();
-
-    private readonly MarkdownPipeline _md = new MarkdownPipelineBuilder()
-        .UseAdvancedExtensions()
-        .Build();
-
-    private string _previewHtml = "";
+    private static readonly MarkdownPipeline _md =
+        new MarkdownPipelineBuilder().UseAdvancedExtensions().DisableHtml().Build();
 
     protected override async Task OnInitializedAsync()
     {
+        var user = await Auth.GetUserAsync();
+        if (user is null)
+        {
+            Nav.NavigateTo("/signup", replace: true);
+            return;
+        }
+
+        await LoadAsync();
+        _ready = true;
+    }
+
+    private async Task LoadAsync()
+    {
         try
         {
-            var user = await Auth.GetUserAsync();
-            if (user is null)
-            {
-                Nav.NavigateTo("/signup", replace: true);
-                return;
-            }
+            // Your JournalService doesn’t have GetByIdAsync; simplest is scan list for now.
+            // If you want, we can add GetByIdAsync to service as a clean next step.
+            var list = await Journal.ListAsync((await Auth.GetUserAsync())!.Id);
+            _entry = list.FirstOrDefault(e => e.Id == Id);
 
-            _userId = user.Id;
-
-            await Db.InitializeAsync().ConfigureAwait(false);
-
-            _allMoods = (await MoodService.ListAsync()).ToList();
-            _primaryMoods = _allMoods.Where(m => m.IsPrimary).OrderBy(m => m.Name).ToList();
-
-            var entry = await Db.Conn.Table<JournalEntry>()
-                .Where(e => e.Id == Id && e.UserId == _userId)
-                .FirstOrDefaultAsync()
-                .ConfigureAwait(false);
-
-            if (entry is null)
-            {
-                _notFound = true;
-                _ready = true;
-                return;
-            }
-
-            _dateIso = entry.DateIso;
-            _title = entry.Title;
-            _content = entry.ContentMarkdown ?? "";
-
-            var moodState = await MoodService.GetEntryMoodsAsync(entry.Id).ConfigureAwait(false);
-            _primaryMoodId = moodState.PrimaryMoodId;
-
-            _secondaryMoodIds.Clear();
-            foreach (var sid in moodState.SecondaryMoodIds)
-                _secondaryMoodIds.Add(sid);
-
-            BuildSecondaryList();
-
-            var tags = await TagService.ListTagsForEntryAsync(entry.Id).ConfigureAwait(false);
-            _tagsCsv = string.Join(", ", tags);
-
-            RebuildPreview();
-            _ready = true;
+            if (_entry is not null)
+                _html = Markdig.Markdown.ToHtml(_entry.ContentMarkdown ?? "", _md);
         }
         catch (Exception ex)
         {
-            Toast.Error($"Entry load failed: {ex.Message}");
+            Toast.Error($"Failed to load entry: {ex.Message}");
         }
     }
 
-    private void OnPrimaryChanged(ChangeEventArgs e)
+    private void Edit()
     {
-        _primaryMoodId = int.TryParse(e.Value?.ToString(), out var id) ? id : null;
-        _secondaryMoodIds.Clear();
-        BuildSecondaryList();
+        if (_entry is null) return;
+        Nav.NavigateTo($"/today?date={_entry.DateIso}&edit=1");
     }
 
-    private void BuildSecondaryList()
+    private async Task DeleteAsync()
     {
-        _secondaryMoods.Clear();
-
-        if (_primaryMoodId is null) return;
-
-        var primary = _allMoods.FirstOrDefault(m => m.Id == _primaryMoodId.Value);
-        if (primary is null) return;
-
-        _secondaryMoods = _allMoods
-            .Where(m => !m.IsPrimary && string.Equals(m.GroupKey, primary.GroupKey, StringComparison.Ordinal))
-            .OrderBy(m => m.Name)
-            .ToList();
-    }
-
-    private void ToggleSecondary(int id)
-    {
-        if (_secondaryMoodIds.Contains(id))
-        {
-            _secondaryMoodIds.Remove(id);
-            return;
-        }
-
-        if (_secondaryMoodIds.Count >= 2)
-        {
-            Toast.Info("You can select up to 2 secondary emotions.");
-            return;
-        }
-
-        _secondaryMoodIds.Add(id);
-    }
-
-    private async Task SaveAsync()
-    {
-        if (_saving) return;
-
-        if (string.IsNullOrWhiteSpace(_title))
-        {
-            Toast.Error("Title is required! Please name your story.");
-            return;
-        }
-
-        if (_primaryMoodId is null)
-        {
-            Toast.Error("Please select a primary mood.");
-            return;
-        }
-
-        if (_secondaryMoodIds.Count < 1)
-        {
-            Toast.Error("Please select at least one secondary emotion.");
-            return;
-        }
-
-        _saving = true;
+        if (_entry is null) return;
 
         try
         {
-            var entry = await Db.Conn.Table<JournalEntry>()
-                .Where(e => e.Id == Id && e.UserId == _userId)
-                .FirstOrDefaultAsync()
-                .ConfigureAwait(false);
-
-            if (entry is null)
-            {
-                Toast.Error("Entry no longer exists.");
-                _notFound = true;
-                return;
-            }
-
-            entry.Title = _title.Trim();
-            entry.ContentMarkdown = _content ?? "";
-            entry.WordCount = CountWords(_content ?? "");
-
-            await Db.Conn.UpdateAsync(entry).ConfigureAwait(false);
-
-            var tags = ParseTags(_tagsCsv);
-            await TagService.SetTagsForEntryAsync(entry.Id, tags).ConfigureAwait(false);
-
-            await MoodService.SetEntryMoodsAsync(entry.Id, _primaryMoodId.Value, _secondaryMoodIds.ToList()).ConfigureAwait(false);
-
-            RebuildPreview();
-            Toast.Success("Journal entry saved successfully!");
+            await Journal.DeleteAsync(_entry.Id);
+            Toast.Success("Entry deleted.");
             Nav.NavigateTo("/entries", replace: true);
         }
         catch (Exception ex)
         {
-            Toast.Error($"Save failed: {ex.Message}");
-        }
-        finally
-        {
-            _saving = false;
+            Toast.Error($"Delete failed: {ex.Message}");
         }
     }
-
-    private void RebuildPreview()
-    {
-        _previewHtml = Markdown.ToHtml(_content ?? "", _md);
-        StateHasChanged();
-    }
-
-    private static int CountWords(string s)
-    {
-        if (string.IsNullOrWhiteSpace(s)) return 0;
-        var parts = s.Split(new[] { ' ', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-        return parts.Length;
-    }
-
-    private static List<string> ParseTags(string csv)
-        => (csv ?? "")
-            .Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(t => t.Trim())
-            .Where(t => !string.IsNullOrWhiteSpace(t))
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
 }
+
+<style>
+    .entry-title {
+        font-size: 44px;
+        font-weight: 900;
+        margin: 16px 0 10px;
+        color: #e9eefc
+    }
+
+    .center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 45vh;
+        color: #9fb0d2
+    }
+
+    .card {
+        max-width: 980px;
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10)
+    }
+
+    .meta {
+        color: #9fb0d2;
+        font-weight: 800;
+        margin-bottom: 8px
+    }
+
+    .title {
+        font-size: 30px;
+        font-weight: 900;
+        color: #e9eefc;
+        margin-bottom: 10px
+    }
+
+    .actions {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px
+    }
+
+    .btn {
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.12);
+        background: rgba(0,0,0,0.18);
+        color: #e9eefc
+    }
+
+        .btn.danger {
+            border-color: rgba(255,80,80,0.35);
+            color: #ffd1d1
+        }
+
+    .content {
+        color: #c9d6f2
+    }
+
+    .panel {
+        max-width: 680px;
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.10)
+    }
+
+    .panel-title {
+        font-size: 18px;
+        font-weight: 900;
+        color: #e9eefc;
+        margin-bottom: 10px
+    }
+</style>

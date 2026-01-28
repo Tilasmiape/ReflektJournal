@@ -94,6 +94,13 @@ build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxTaWdudXAucmF6b3I=
 build_metadata.AdditionalFiles.RelativePath = 
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Tilasmi Subedi/source/repos/ReflektJournal/ReflektJournal/Pages/Entry.razor]
+build_metadata.AdditionalFiles.GenKind = 
+build_metadata.AdditionalFiles.ManifestResourceName = 
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRW50cnkucmF6b3I=
+build_metadata.AdditionalFiles.RelativePath = 
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Tilasmi Subedi/source/repos/ReflektJournal/ReflektJournal/Pages/Today.razor]
 build_metadata.AdditionalFiles.GenKind = 
 build_metadata.AdditionalFiles.ManifestResourceName = 
@@ -122,16 +129,16 @@ build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxBdXRoLnJhem9y
 build_metadata.AdditionalFiles.RelativePath = 
 build_metadata.AdditionalFiles.CssScope = b-ex5xu88mww
 
+[C:/Users/Tilasmi Subedi/source/repos/ReflektJournal/ReflektJournal/Pages/Calendar.razor]
+build_metadata.AdditionalFiles.GenKind = 
+build_metadata.AdditionalFiles.ManifestResourceName = 
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQ2FsZW5kYXIucmF6b3I=
+build_metadata.AdditionalFiles.RelativePath = 
+build_metadata.AdditionalFiles.CssScope = b-fyw9lb46p8
+
 [C:/Users/Tilasmi Subedi/source/repos/ReflektJournal/ReflektJournal/Pages/Entries.razor]
 build_metadata.AdditionalFiles.GenKind = 
 build_metadata.AdditionalFiles.ManifestResourceName = 
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRW50cmllcy5yYXpvcg==
 build_metadata.AdditionalFiles.RelativePath = 
 build_metadata.AdditionalFiles.CssScope = b-e7k5cbwkok
-
-[C:/Users/Tilasmi Subedi/source/repos/ReflektJournal/ReflektJournal/Pages/Entry.razor]
-build_metadata.AdditionalFiles.GenKind = 
-build_metadata.AdditionalFiles.ManifestResourceName = 
-build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRW50cnkucmF6b3I=
-build_metadata.AdditionalFiles.RelativePath = 
-build_metadata.AdditionalFiles.CssScope = b-tqopo3umg0

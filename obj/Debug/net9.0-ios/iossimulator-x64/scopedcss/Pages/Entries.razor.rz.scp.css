@@ -238,24 +238,24 @@
     min-height: 44px;
 }
 
-    .preview :deep(p)[b-e7k5cbwkok] {
+    .preview[b-e7k5cbwkok]  {
         margin: 0;
     }
 
-    .preview :deep(em)[b-e7k5cbwkok] {
+    .preview[b-e7k5cbwkok]  {
         opacity: .85;
     }
 
-    .preview :deep(strong)[b-e7k5cbwkok] {
+    .preview[b-e7k5cbwkok]  {
         color: #eef3ff;
     }
 
-    .preview :deep(a)[b-e7k5cbwkok] {
+    .preview[b-e7k5cbwkok]  {
         color: #6aa6ff;
         text-decoration: underline;
     }
 
-    .preview :deep(code)[b-e7k5cbwkok] {
+    .preview[b-e7k5cbwkok] (code) {
         padding: 2px 6px;
         border-radius: 8px;
         background: rgba(255,255,255,0.08);

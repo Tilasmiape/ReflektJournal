@@ -35,11 +35,9 @@ public static class MauiProgram
         builder.Services.AddSingleton<IJournalService, JournalService>();
         builder.Services.AddSingleton<IMoodService, MoodService>();
         builder.Services.AddSingleton<ITagService, TagService>();
-        builder.Services.AddSingleton<ICategoryService, CategoryService>();
+       
         builder.Services.AddSingleton<IAnalyticsService, AnalyticsService>();
         builder.Services.AddSingleton<IPdfExportService, PdfExportService>();
-        builder.Services.AddSingleton<IMarkdownService, MarkdownService>();
-
 
         return builder.Build();
     }

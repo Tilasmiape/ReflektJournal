@@ -92,12 +92,12 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName></AssetTraitName>
       <AssetTraitValue></AssetTraitValue>
-      <Fingerprint>ukfl5kwfxk</Fingerprint>
-      <Integrity>Hve80hoJ4M0fdPej/brwOfFbKms9REdkFvoKEL+1uhA=</Integrity>
+      <Fingerprint>mddnmc3j1l</Fingerprint>
+      <Integrity>hua6lh+mhXTzSsrNuyYPkSMkS6pLEf83/DVc+dUQP08=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <FileLength>2149</FileLength>
-      <LastWriteTime>Mon, 26 Jan 2026 10:30:15 GMT</LastWriteTime>
+      <FileLength>1705</FileLength>
+      <LastWriteTime>Mon, 26 Jan 2026 20:58:49 GMT</LastWriteTime>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\js\mdEditor.js'))</OriginalItemSpec>
     </StaticWebAsset>
     <StaticWebAsset Include="$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ReflektJournal.styles.css'))">
@@ -112,12 +112,12 @@
       <RelatedAsset></RelatedAsset>
       <AssetTraitName>ScopedCss</AssetTraitName>
       <AssetTraitValue>ApplicationBundle</AssetTraitValue>
-      <Fingerprint>xtqm6aqctq</Fingerprint>
-      <Integrity>qwDU01b40MKoUzhIzR2VrJxVihpRHXE42rsZpyt/4+I=</Integrity>
+      <Fingerprint>lxfsm0y0hq</Fingerprint>
+      <Integrity>qTVRsJ5xM5xdcKLandMemofa3GRP5RuzTv1drI+jrzQ=</Integrity>
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      <FileLength>17775</FileLength>
-      <LastWriteTime>Mon, 26 Jan 2026 18:52:44 GMT</LastWriteTime>
+      <FileLength>17760</FileLength>
+      <LastWriteTime>Tue, 27 Jan 2026 14:09:12 GMT</LastWriteTime>
       <OriginalItemSpec>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\staticwebassets\ReflektJournal.styles.css'))</OriginalItemSpec>
     </StaticWebAsset>
   </ItemGroup>

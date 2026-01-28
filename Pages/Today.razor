@@ -19,37 +19,33 @@
 
 @if (!_ready)
 {
-    <div class="center">Loading...</div>
+    <p class="muted">Loading...</p>
 }
 else if (_entryExists && !_editMode)
 {
-    <!-- “Entry Already Exists” panel (prototype behavior) -->
-    <div class="exists-wrap">
-        <div class="exists-card">
-            <div class="exists-icon">!</div>
-            <div class="exists-title">Entry Already Exists</div>
-            <div class="exists-sub">
-                You've already written for <b>@_displayDate</b>. You can edit today's entry instead.
-            </div>
+    <!-- ✅ Entry already exists panel -->
+    <div class="exists-card">
+        <div class="exists-icon">!</div>
+        <div class="exists-title">Entry Already Exists</div>
+        <div class="exists-sub">
+            You've already written for <b>@_displayDate</b>. You can edit today's entry instead.
+        </div>
 
-            <div class="exists-actions">
-                <button class="btn btn-ghost" type="button" @onclick="GoBack">Go Back</button>
-                <button class="btn btn-primary" type="button" @onclick="GoToEdit">Edit Today's Entry</button>
-            </div>
+        <div class="exists-actions">
+            <button class="btn ghost" @onclick="GoBack" type="button">Go Back</button>
+            <button class="btn primary" @onclick="GoToEdit" type="button">Edit Today's Entry</button>
         </div>
     </div>
 }
 else
 {
+    <!-- ✅ Editor -->
     <div class="card">
         <div class="date-row">@_displayDate</div>
 
         <div class="field">
             <label>Journal Title <span class="req">*</span></label>
-            <input class="inp"
-                   @bind-value="_title"
-                   @bind-value:event="oninput"
-                   placeholder="Today" />
+            <input class="input" @bind="_title" />
         </div>
 
         <div class="field">
@@ -60,8 +56,8 @@ else
                 {
                     var active = _primaryMoodId == p.Id;
                     <button type="button"
-                            class="primary @(active ? "active" : "")"
-                            @onclick="() => SelectPrimary(p.Id)">
+                            class="primaryMood @(active ? "active" : "")"
+                            @onclick="@(() => SelectPrimary(p.Id))">
                         <span class="emoji">@PrimaryEmoji(p.GroupKey)</span>
                         <span class="label">@p.Name</span>
                     </button>
@@ -84,7 +80,7 @@ else
                         var on = _secondaryMoodIds.Contains(s.Id);
                         <button type="button"
                                 class="chip @(on ? "chip-on" : "chip-off")"
-                                @onclick="() => ToggleSecondary(s.Id)">
+                                @onclick="@(() => ToggleSecondary(s.Id))">
                             @s.Name
                         </button>
                     }
@@ -103,19 +99,18 @@ else
                     var on = _selectedTagIds.Contains(t.Id);
                     <button type="button"
                             class="chip @(on ? "chip-on" : "chip-off")"
-                            @onclick="() => ToggleTag(t.Id)">
+                            @onclick="@(() => ToggleTag(t.Id))">
                         @t.Name
                     </button>
                 }
             </div>
 
             <div class="tag-add">
-                <input class="inp"
+                <input class="input"
                        placeholder="Add custom tag and press Enter"
-                       value="@_customTag"
-                       @oninput="OnCustomTagInput"
+                       @bind="_customTag"
                        @onkeydown="OnCustomTagKeyDown" />
-                <button type="button" class="btn btn-ghost" @onclick="AddCustomTag">Add</button>
+                <button type="button" class="btn ghost" @onclick="AddCustomTag">Add</button>
             </div>
 
             @if (_customTags.Count > 0)
@@ -125,7 +120,7 @@ else
                     {
                         <span class="custom-chip">
                             @t
-                            <button type="button" class="x" @onclick="() => RemoveCustomTag(t)">×</button>
+                            <button type="button" class="x" @onclick="@(() => RemoveCustomTag(t))">×</button>
                         </span>
                     }
                 </div>
@@ -134,30 +129,29 @@ else
 
         <div class="field">
             <div class="entry-header">
-                <label>Entry</label>
+                <label>Entry (Markdown supported)</label>
 
-                <div class="entry-actions">
-                    <button type="button" class="btn btn-ghost btn-sm" @onclick="TogglePreview">
-                        @(_showPreview ? "Hide Preview" : "Show Preview")
-                    </button>
-                </div>
+                <button type="button" class="btn ghost sm" @onclick="TogglePreview">
+                    @(_showPreview ? "Hide Preview" : "Show Preview")
+                </button>
             </div>
 
             <div class="md-toolbar">
-                <button type="button" class="tool" title="Bold" @onclick="() => WrapAsync(BOLD, BOLD)"><b>B</b></button>
-                <button type="button" class="tool" title="Italic" @onclick="() => WrapAsync(ITALIC, ITALIC)"><i>I</i></button>
-                <button type="button" class="tool" title="Heading" @onclick="() => PrefixLinesAsync(H1)">H</button>
-                <button type="button" class="tool" title="Bulleted list" @onclick="() => PrefixLinesAsync(BULLET)">•</button>
-                <button type="button" class="tool" title="Numbered list" @onclick="() => PrefixLinesAsync(NUM)">1.</button>
-                <button type="button" class="tool" title="Link" @onclick="InsertLinkAsync">🔗</button>
+                <button type="button" class="tool" title="Bold" @onclick="BoldAsync"><b>B</b></button>
+                <button type="button" class="tool" title="Italic" @onclick="ItalicAsync"><i>I</i></button>
+                <button type="button" class="tool" title="Heading" @onclick="HeadingAsync">H</button>
+                <button type="button" class="tool" title="Bulleted list" @onclick="BulletAsync">•</button>
+                <button type="button" class="tool" title="Numbered list" @onclick="NumberedAsync">1.</button>
+                <button type="button" class="tool" title="Link" @onclick="LinkAsync">🔗</button>
             </div>
 
-            <textarea class="ta"
+            <textarea class="textarea"
                       @ref="_entryArea"
                       rows="10"
-                      value="@_content"
-                      @oninput="OnContentInput"
-                      placeholder="Write your thoughts... (Markdown supported)"></textarea>
+                      @bind="_content"
+                      @bind:event="oninput"
+                      @bind:after="OnContentAfterChanged"
+                      placeholder="Write your thoughts..."></textarea>
 
             @if (_showPreview)
             {
@@ -168,36 +162,30 @@ else
         </div>
 
         <div class="row">
-            <button class="btn btn-primary" type="button" @onclick="SaveAsync" disabled="@_saving">
-                @(_saving ? "Saving..." : (_entryExists ? "Update Entry" : "Save Entry"))
+            <button class="btn primary" @onclick="SaveAsync" disabled="@_saving" type="button">
+                @(_saving ? "Saving..." : "Save Entry")
             </button>
 
-            @if (_entryExists)
+            @if (_entryExists && _editMode)
             {
-                <button class="btn btn-ghost" type="button" @onclick="CancelEdit">Cancel</button>
+                <button class="btn ghost" @onclick="CancelEdit" type="button">Cancel</button>
             }
         </div>
     </div>
 }
 
 @code {
-    // Query parameters
-    [Parameter, SupplyParameterFromQuery(Name = "date")]
-    public string? Date { get; set; }
-
-    [Parameter, SupplyParameterFromQuery(Name = "edit")]
-    public string? Edit { get; set; }
-
     private bool _ready;
     private bool _saving;
 
-    private string _dateIso = "";
-    private string _displayDate = "";
     private int _userId;
+    private int _entryId;
 
     private bool _entryExists;
     private bool _editMode;
-    private int _entryId;
+
+    private string _dateIso = "";
+    private string _displayDate = "";
 
     private string _title = "";
     private string _content = "";
@@ -215,19 +203,23 @@ else
     private string _customTag = "";
     private readonly HashSet<string> _customTags = new(StringComparer.OrdinalIgnoreCase);
 
+    [Parameter, SupplyParameterFromQuery(Name = "date")]
+    public string? Date { get; set; }
+
+
+    [Parameter, SupplyParameterFromQuery(Name = "edit")]
+    public string? Edit { get; set; }
+
     // Markdown
     private ElementReference _entryArea;
     private bool _showPreview = true;
     private string _previewHtml = "";
 
     private static readonly MarkdownPipeline _mdPipeline =
-        new MarkdownPipelineBuilder().UseAdvancedExtensions().DisableHtml().Build();
-
-    private const string BOLD = "**";
-    private const string ITALIC = "*";
-    private const string H1 = "# ";
-    private const string BULLET = "- ";
-    private const string NUM = "1. ";
+        new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .DisableHtml()
+            .Build();
 
     protected override async Task OnInitializedAsync()
     {
@@ -240,100 +232,107 @@ else
 
         _userId = user.Id;
 
+        _allMoods = (await MoodService.ListAsync()).ToList();
+        _primaryMoods = _allMoods.Where(m => m.IsPrimary).ToList();
+
+        _allTags = (await TagService.ListAsync()).ToList();
+
+        _ready = true;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_ready) return;
+
         var target = ParseDateOrToday(Date);
         _dateIso = target.ToString("yyyy-MM-dd");
         _displayDate = target.ToString("dddd, MMMM d, yyyy");
 
-        // Load lookups
-        _allMoods = (await MoodService.ListAsync()).ToList();
-        _primaryMoods = _allMoods.Where(m => m.IsPrimary).OrderBy(m => m.Name).ToList();
-        _allTags = (await TagService.ListAsync()).ToList();
-
-        // Load existing entry for this date
-        var existing = await Journal.GetByDateAsync(_dateIso);
-
-        _entryExists = existing is not null;
-        _entryId = existing?.Id ?? 0;
-
-        var editRequested = string.Equals(Edit, "1", StringComparison.OrdinalIgnoreCase) ||
-                            string.Equals(Edit, "true", StringComparison.OrdinalIgnoreCase);
-
-        if (!_entryExists)
-        {
-            // New entry
-            _editMode = true;
-            ResetForm();
-
-            // Default to Neutral if available
-            var neutral = _primaryMoods.FirstOrDefault(m => m.GroupKey == "Neutral" || m.Name == "Neutral");
-            if (neutral is not null)
-                SelectPrimary(neutral.Id);
-        }
-        else if (editRequested)
-        {
-            // Editing existing entry
-            _editMode = true;
-            await LoadEntryIntoFormAsync(existing!);
-        }
-        else
-        {
-            // Entry exists + not editing => show “Entry Already Exists” panel
-            _editMode = false;
-        }
-
+        await LoadStateForDateAsync();
         RefreshPreview();
-        _ready = true;
+        StateHasChanged();
     }
 
     private static DateTime ParseDateOrToday(string? iso)
-    {
-        if (!string.IsNullOrWhiteSpace(iso) && DateTime.TryParse(iso.Trim(), out var dt))
-            return dt.Date;
+        => DateTime.TryParse((iso ?? "").Trim(), out var dt) ? dt.Date : DateTime.Now.Date;
 
-        return DateTime.Now.Date;
+    private bool IsEditRequested()
+        => string.Equals(Edit, "1", StringComparison.OrdinalIgnoreCase)
+           || string.Equals(Edit, "true", StringComparison.OrdinalIgnoreCase);
+
+    private async Task LoadStateForDateAsync()
+    {
+        var existing = await Journal.GetByDateAsync(_dateIso);
+
+        if (existing is null)
+        {
+            // ✅ no entry: allow writing
+            _entryExists = false;
+            _editMode = true;
+            _entryId = 0;
+            ResetForm();
+
+            // default primary mood
+            var neutral = _primaryMoods.FirstOrDefault(m => m.GroupKey == "Neutral" || m.Name == "Neutral");
+            if (neutral is not null) SelectPrimary(neutral.Id);
+            return;
+        }
+
+        // ✅ entry exists
+        _entryExists = true;
+        _entryId = existing.Id;
+
+        if (IsEditRequested())
+        {
+            // ✅ load into editor
+            _editMode = true;
+
+            _title = existing.Title ?? "";
+            _content = existing.ContentMarkdown ?? "";
+
+            var moodState = await MoodService.GetEntryMoodsAsync(existing.Id);
+            _primaryMoodId = moodState.PrimaryMoodId;
+
+            _secondaryMoodIds.Clear();
+            foreach (var id in moodState.SecondaryMoodIds)
+                _secondaryMoodIds.Add(id);
+
+            if (_primaryMoodId is not null)
+                SelectPrimary(_primaryMoodId.Value);
+
+            _selectedTagIds.Clear();
+            _customTags.Clear();
+
+            var existingTagNames = await TagService.ListTagsForEntryAsync(existing.Id);
+            var known = _allTags.ToDictionary(t => t.Name, t => t.Id, StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in existingTagNames)
+            {
+                if (known.TryGetValue(name, out var id))
+                    _selectedTagIds.Add(id);
+                else
+                    _customTags.Add(name);
+            }
+        }
+        else
+        {
+            // ✅ show exists-panel instead of editor
+            _editMode = false;
+            ResetForm();
+        }
     }
 
     private void ResetForm()
     {
-        _title = "Today";
+        _title = "";
         _content = "";
         _primaryMoodId = null;
         _secondaryMoodIds.Clear();
         _selectedTagIds.Clear();
         _customTag = "";
         _customTags.Clear();
-        _secondaryForSelectedPrimary = new();
-    }
-
-    private async Task LoadEntryIntoFormAsync(JournalEntry entry)
-    {
-        _title = entry.Title ?? "";
-        _content = entry.ContentMarkdown ?? "";
-
-        var moodState = await MoodService.GetEntryMoodsAsync(entry.Id);
-        _primaryMoodId = moodState.PrimaryMoodId;
-
-        _secondaryMoodIds.Clear();
-        foreach (var id in moodState.SecondaryMoodIds)
-            _secondaryMoodIds.Add(id);
-
-        if (_primaryMoodId is not null)
-            SelectPrimary(_primaryMoodId.Value);
-
-        var tagNames = await TagService.ListTagsForEntryAsync(entry.Id);
-
-        _selectedTagIds.Clear();
-        _customTags.Clear();
-
-        var known = _allTags.ToDictionary(t => t.Name, t => t.Id, StringComparer.OrdinalIgnoreCase);
-
-        foreach (var name in tagNames)
-        {
-            if (known.TryGetValue(name, out var id))
-                _selectedTagIds.Add(id);
-            else
-                _customTags.Add(name);
-        }
+        _secondaryForSelectedPrimary = new List<Mood>();
+        RefreshPreview();
     }
 
     private void GoBack() => Nav.NavigateTo("/entries", replace: true);
@@ -342,10 +341,7 @@ else
         => Nav.NavigateTo($"/today?date={_dateIso}&edit=1", replace: true);
 
     private void CancelEdit()
-    {
-        // Back to “exists” panel for this date
-        Nav.NavigateTo($"/today?date={_dateIso}", replace: true);
-    }
+        => Nav.NavigateTo($"/today?date={_dateIso}", replace: true);
 
     private void SelectPrimary(int primaryId)
     {
@@ -384,12 +380,11 @@ else
             _selectedTagIds.Add(tagId);
     }
 
-    private void OnCustomTagInput(ChangeEventArgs e) => _customTag = e.Value?.ToString() ?? "";
-
     private Task OnCustomTagKeyDown(KeyboardEventArgs e)
     {
         if (e.Key == "Enter")
             AddCustomTag();
+
         return Task.CompletedTask;
     }
 
@@ -405,31 +400,28 @@ else
 
     private void RemoveCustomTag(string name) => _customTags.Remove(name);
 
-    private void OnContentInput(ChangeEventArgs e)
-    {
-        _content = e.Value?.ToString() ?? "";
-        if (_showPreview)
-            RefreshPreview();
-    }
-
     private void TogglePreview()
     {
         _showPreview = !_showPreview;
-        if (_showPreview)
-            RefreshPreview();
+        if (_showPreview) RefreshPreview();
     }
 
     private void RefreshPreview()
-        => _previewHtml = Markdig.Markdown.ToHtml(_content ?? "", _mdPipeline);
+        => _previewHtml = Markdown.ToHtml(_content ?? "", _mdPipeline);
 
-    private async Task WrapAsync(string before, string after)
-        => await JS.InvokeVoidAsync("mdEditor.wrap", _entryArea, before, after);
+    private Task OnContentAfterChanged()
+    {
+        if (_showPreview) RefreshPreview();
+        return Task.CompletedTask;
+    }
 
-    private async Task PrefixLinesAsync(string prefix)
-        => await JS.InvokeVoidAsync("mdEditor.prefixLines", _entryArea, prefix);
-
-    private async Task InsertLinkAsync()
-        => await JS.InvokeVoidAsync("mdEditor.insertAtCursor", _entryArea, "[text](https://example.com)");
+    // ✅ toolbar commands (no quote/onclick bugs)
+    private async Task BoldAsync() => await JS.InvokeVoidAsync("mdEditor.wrap", _entryArea, "**", "**");
+    private async Task ItalicAsync() => await JS.InvokeVoidAsync("mdEditor.wrap", _entryArea, "*", "*");
+    private async Task HeadingAsync() => await JS.InvokeVoidAsync("mdEditor.prefixLines", _entryArea, "# ");
+    private async Task BulletAsync() => await JS.InvokeVoidAsync("mdEditor.prefixLines", _entryArea, "- ");
+    private async Task NumberedAsync() => await JS.InvokeVoidAsync("mdEditor.prefixLines", _entryArea, "1. ");
+    private async Task LinkAsync() => await JS.InvokeVoidAsync("mdEditor.insertAtCursor", _entryArea, "[text](https://example.com)");
 
     private async Task SaveAsync()
     {
@@ -438,21 +430,15 @@ else
 
         try
         {
-            // Enforce “one entry per day”
-            var existing = await Journal.GetByDateAsync(_dateIso);
-            if (existing is not null && !_entryExists)
+            if (!_editMode && _entryExists)
             {
-                // Someone tried to create again; show panel
-                _entryExists = true;
-                _editMode = false;
-                _entryId = existing.Id;
-                Toast.Info("Entry already exists for this date.");
+                Toast.Error("Entry already exists for this day. Click Edit.");
                 return;
             }
 
             if (string.IsNullOrWhiteSpace(_title))
             {
-                Toast.Error("Title is required.");
+                Toast.Error("Title is required!");
                 return;
             }
 
@@ -468,9 +454,13 @@ else
                 return;
             }
 
+            // ✅ if entry exists, always update that same record
+            var existing = await Journal.GetByDateAsync(_dateIso);
+            var idToUse = existing?.Id ?? _entryId;
+
             var entry = new JournalEntry
             {
-                Id = _entryId,          // IMPORTANT: keeps edit as update
+                Id = idToUse,
                 UserId = _userId,
                 DateIso = _dateIso,
                 Title = _title.Trim(),
@@ -478,30 +468,28 @@ else
                 WordCount = CountWords(_content ?? "")
             };
 
-            var id = await Journal.UpsertAsync(entry);
-            _entryId = id;
+            var savedId = await Journal.UpsertAsync(entry);
+            _entryId = savedId;
 
-            await MoodService.SetEntryMoodsAsync(id, _primaryMoodId.Value, _secondaryMoodIds.ToList());
+            await MoodService.SetEntryMoodsAsync(savedId, _primaryMoodId.Value, _secondaryMoodIds.ToList());
 
-            var selectedTagNames =
-                _allTags.Where(t => _selectedTagIds.Contains(t.Id)).Select(t => t.Name)
+            var selectedTagNames = _allTags
+                .Where(t => _selectedTagIds.Contains(t.Id))
+                .Select(t => t.Name)
                 .Concat(_customTags)
                 .Select(t => (t ?? "").Trim())
                 .Where(t => !string.IsNullOrWhiteSpace(t))
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
 
-            await TagService.SetTagsForEntryAsync(id, selectedTagNames);
-
-            _entryExists = true;
-            _editMode = false;
+            await TagService.SetTagsForEntryAsync(savedId, selectedTagNames);
 
             Toast.Success("Journal entry saved successfully!");
-            Nav.NavigateTo("/entries", replace: true);
+            Nav.NavigateTo("/entries", replace: true); // ✅ go back to timeline so you SEE the update
         }
         catch
         {
-            Toast.Error("Save failed. Please try again.");
+            Toast.Error("Failed to save entry.");
         }
         finally
         {
@@ -525,28 +513,26 @@ else
 }
 
 <style>
-    .center {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 40vh;
-        opacity: .7
+    .page-title {
+        font-size: 54px;
+        font-weight: 900;
+        margin: 10px 0 10px;
     }
 
-    .page-title {
-        font-size: 44px;
-        font-weight: 900;
-        margin: 14px 0 10px;
-        color: #e9eefc
+    .muted {
+        opacity: .75
+    }
+
+    .req {
+        color: #ffb86b
     }
 
     .card {
         max-width: 980px;
         padding: 18px;
-        border-radius: 20px;
-        background: rgba(255,255,255,.05);
-        border: 1px solid rgba(255,255,255,.10);
-        box-shadow: 0 10px 40px rgba(0,0,0,.15);
+        border-radius: 18px;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.12);
     }
 
     .date-row {
@@ -564,26 +550,14 @@ else
             opacity: .9
         }
 
-    .req {
-        color: #ffb36b
-    }
-
-    .inp, .ta {
+    .input, .textarea {
         width: 100%;
         padding: 12px 14px;
         border-radius: 14px;
-        border: 1px solid rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.14);
         background: rgba(0,0,0,.18);
         color: inherit;
         outline: none;
-    }
-
-    .row {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-top: 14px;
-        flex-wrap: wrap
     }
 
     .primary-row {
@@ -592,7 +566,7 @@ else
         flex-wrap: wrap
     }
 
-    .primary {
+    .primaryMood {
         min-width: 220px;
         padding: 14px 16px;
         border-radius: 16px;
@@ -603,16 +577,11 @@ else
         gap: 10px;
         align-items: center;
         justify-content: center;
-        transition: .15s ease;
     }
 
-        .primary:hover {
-            border-color: rgba(255,255,255,.22)
-        }
-
-        .primary.active {
-            border: 2px solid rgba(255,179,107,.95);
-            box-shadow: 0 0 0 4px rgba(255,179,107,.14);
+        .primaryMood.active {
+            border: 2px solid #ffb86b;
+            box-shadow: 0 0 0 4px rgba(255,184,107,.16);
         }
 
     .emoji {
@@ -634,11 +603,10 @@ else
         border-radius: 999px;
         border: 1px solid rgba(255,255,255,.12);
         cursor: pointer;
-        background: rgba(255,255,255,.04);
     }
 
     .chip-on {
-        border: 2px solid rgba(255,179,107,.95)
+        border: 2px solid #ffb86b
     }
 
     .chip-off {
@@ -646,7 +614,7 @@ else
     }
 
     .hint {
-        opacity: .75;
+        opacity: .7;
         margin-top: 8px
     }
 
@@ -671,7 +639,6 @@ else
         display: flex;
         gap: 8px;
         align-items: center;
-        background: rgba(255,255,255,.03);
     }
 
         .custom-chip .x {
@@ -682,40 +649,42 @@ else
             color: inherit
         }
 
+    .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-top: 14px;
+        flex-wrap: wrap
+    }
+
     .btn {
         border: 0;
         border-radius: 12px;
         padding: 10px 14px;
         cursor: pointer;
-        border: 1px solid rgba(255,255,255,.12);
+        font-weight: 800;
     }
 
-    .btn-primary {
-        background: linear-gradient(180deg, rgba(255,179,107,.95), rgba(255,146,71,.92));
-        color: #1c120a;
-        font-weight: 900;
-        border-color: rgba(255,179,107,.40);
-    }
+        .btn.primary {
+            background: rgba(255,184,107,.22);
+            border: 1px solid rgba(255,184,107,.45)
+        }
 
-    .btn-ghost {
-        background: rgba(255,255,255,.06);
-        color: inherit;
-    }
+        .btn.ghost {
+            background: rgba(255,255,255,.10);
+            border: 1px solid rgba(255,255,255,.14)
+        }
 
-    .btn-sm {
-        padding: 6px 10px;
-        border-radius: 10px
-    }
+        .btn.sm {
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-weight: 800
+        }
 
     .entry-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        gap: 10px
-    }
-
-    .entry-actions {
-        display: flex;
         gap: 10px
     }
 
@@ -738,16 +707,12 @@ else
         margin-top: 12px;
         padding: 14px;
         border-radius: 14px;
-        border: 1px solid rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.12);
         background: rgba(0,0,0,.12);
     }
 
-        .md-preview p {
-            margin: 0 0 10px 0
-        }
-
         .md-preview h1, .md-preview h2, .md-preview h3 {
-            margin: 14px 0 8px 0
+            margin-top: 14px
         }
 
         .md-preview a {
@@ -760,20 +725,12 @@ else
             background: rgba(255,255,255,.08)
         }
 
-    /* Exists panel (prototype style) */
-    .exists-wrap {
-        display: flex;
-        justify-content: center;
-        align-items: flex-start
-    }
-
     .exists-card {
-        width: min(980px, 96%);
-        margin-top: 18px;
-        background: rgba(255, 214, 170, .10);
-        border: 1px solid rgba(255, 193, 126, .35);
-        border-radius: 22px;
-        padding: 22px;
+        max-width: 980px;
+        border-radius: 18px;
+        padding: 26px 18px;
+        background: rgba(255,184,107,.10);
+        border: 1px solid rgba(255,184,107,.35);
         text-align: center;
     }
 
@@ -784,28 +741,28 @@ else
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        background: rgba(255, 193, 126, .25);
-        border: 1px solid rgba(255, 193, 126, .45);
+        border: 1px solid rgba(255,184,107,.45);
+        background: rgba(255,184,107,.18);
         font-weight: 900;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
 
     .exists-title {
-        font-size: 22px;
+        font-size: 30px;
         font-weight: 900;
-        color: #ffb36b;
-        margin-bottom: 6px
+        margin-bottom: 8px;
+        color: #ffcc9a
     }
 
     .exists-sub {
         opacity: .9;
-        margin-bottom: 14px
+        margin-bottom: 16px
     }
 
     .exists-actions {
         display: flex;
-        gap: 12px;
         justify-content: center;
+        gap: 12px;
         flex-wrap: wrap
     }
 </style>

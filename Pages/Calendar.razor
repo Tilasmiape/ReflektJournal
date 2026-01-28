@@ -1,0 +1,207 @@
+﻿
+@page "/calendar"
+
+@using ReflektJournal.Models
+@using ReflektJournal.Services.Interfaces
+
+@inject IAuthService Auth
+@inject IJournalService Journal
+@inject IToastService Toast
+@inject NavigationManager Nav
+
+<h1 class="cal-title">Calendar</h1>
+<p class="cal-sub">Pick a date to write or view your entry.</p>
+
+@if (!_ready)
+{
+    <div class="cal-center">Loading...</div>
+}
+else
+{
+    <div class="cal-shell">
+        <div class="cal-head">
+            <button type="button" class="cal-nav" @onclick="PrevMonthAsync">←</button>
+            <div class="cal-month">@_cursor.ToString("MMMM yyyy")</div>
+            <button type="button" class="cal-nav" @onclick="NextMonthAsync">→</button>
+        </div>
+
+        <div class="cal-weekdays">
+            @foreach (var d in _weekdays)
+            {
+                <div class="cal-wd">@d</div>
+            }
+        </div>
+
+        <div class="cal-grid">
+            @foreach (var cell in _cells)
+            {
+                if (!cell.IsInMonth)
+                {
+                    <div class="cal-empty"></div>
+                }
+                else
+                {
+                    var cls = "cal-day";
+                    if (cell.IsToday) cls += " cal-today";
+                    if (cell.HasEntry) cls += " cal-has";
+                    if (_busyIso == cell.DateIso) cls += " cal-busy";
+
+                    <button type="button"
+                            class="@cls"
+                            disabled="@(_busyIso == cell.DateIso)"
+                            @onclick:stopPropagation="true"
+                            @onclick="() => OnDateClickAsync(cell.DateIso)">
+                        <div class="cal-num">@cell.Day</div>
+                        @if (cell.HasEntry)
+                        {
+                            <div class="cal-dot" title="Entry exists"></div>
+                        }
+                    </button>
+                }
+            }
+        </div>
+
+        <div class="cal-legend">
+            <span class="pill"><span class="dotLegend"></span> Entry exists</span>
+            <span class="pill"><span class="todayLegend"></span> Today</span>
+        </div>
+    </div>
+}
+
+@code {
+    private bool _ready;
+    private int _userId;
+
+    private DateTime _cursor = new(DateTime.Now.Year, DateTime.Now.Month, 1);
+    private readonly string[] _weekdays = new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+
+    private List<DayCell> _cells = new();
+    private HashSet<string> _entryDates = new(StringComparer.Ordinal); // yyyy-MM-dd
+
+    private string? _busyIso;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var user = await Auth.GetUserAsync();
+        if (user is null)
+        {
+            Nav.NavigateTo("/signup", replace: true);
+            return;
+        }
+
+        _userId = user.Id;
+
+        await ReloadMonthAsync();
+        _ready = true;
+    }
+
+    private async Task ReloadMonthAsync()
+    {
+        try
+        {
+            // Fast and simple: load all entries for user then mark dates for this month.
+            // If you want, we can optimize later with a month-only query.
+            var entries = await Journal.ListAsync(_userId);
+
+            var ym = _cursor.ToString("yyyy-MM");
+            _entryDates = entries
+                .Select(e => e.DateIso)
+                .Where(s => !string.IsNullOrWhiteSpace(s) && s.StartsWith(ym, StringComparison.Ordinal))
+                .ToHashSet(StringComparer.Ordinal);
+
+            BuildGrid();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Calendar load failed: {ex.Message}");
+        }
+    }
+
+    private void BuildGrid()
+    {
+        _cells.Clear();
+
+        var first = new DateTime(_cursor.Year, _cursor.Month, 1);
+        var lead = (int)first.DayOfWeek; // 0=Sun
+        var daysInMonth = DateTime.DaysInMonth(_cursor.Year, _cursor.Month);
+
+        for (var i = 0; i < lead; i++)
+            _cells.Add(DayCell.Empty());
+
+        for (var day = 1; day <= daysInMonth; day++)
+        {
+            var dt = new DateTime(_cursor.Year, _cursor.Month, day);
+            var iso = dt.ToString("yyyy-MM-dd");
+
+            _cells.Add(new DayCell
+            {
+                IsInMonth = true,
+                Day = day,
+                DateIso = iso,
+                HasEntry = _entryDates.Contains(iso),
+                IsToday = dt.Date == DateTime.Now.Date
+            });
+        }
+
+        while (_cells.Count % 7 != 0)
+            _cells.Add(DayCell.Empty());
+    }
+
+    // 1) Calendar click handler
+    // 2) "API call" equivalent: SQLite via JournalService.GetByDateAsync
+    // 3) Navigation routing: /today or /entry/{id}
+    private async Task OnDateClickAsync(string dateIso)
+    {
+        if (_busyIso is not null) return;
+        _busyIso = dateIso;
+
+        try
+        {
+            var entry = await Journal.GetByDateAsync(dateIso);
+
+            if (entry is null)
+            {
+                // No entry -> Write page with date preselected
+                Nav.NavigateTo($"/today?date={dateIso}", replace: false);
+                return;
+            }
+
+            // Entry exists -> View entry page
+            Nav.NavigateTo($"/entry/{entry.Id}", replace: false);
+        }
+        catch (Exception ex)
+        {
+            Toast.Error($"Failed to open date: {ex.Message}");
+        }
+        finally
+        {
+            _busyIso = null;
+        }
+    }
+
+    private async Task PrevMonthAsync()
+    {
+        _cursor = _cursor.AddMonths(-1);
+        await ReloadMonthAsync();
+    }
+
+    private async Task NextMonthAsync()
+    {
+        _cursor = _cursor.AddMonths(1);
+        await ReloadMonthAsync();
+    }
+
+    private sealed class DayCell
+    {
+        public bool IsInMonth { get; init; }
+        public int Day { get; init; }
+        public string DateIso { get; init; } = "";
+        public bool HasEntry { get; init; }
+        public bool IsToday { get; init; }
+
+        public static DayCell Empty() => new() { IsInMonth = false };
+    }
+}
+
+
